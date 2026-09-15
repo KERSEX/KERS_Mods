@@ -1,20 +1,20 @@
 @echo off
 REM =====================================================================
-REM  KERS Mods - MOZA Wheelbase AutoInstaller fuer F1 2015 - F1 23
+REM  KERS F1 Mods Installer - Werkzeugkasten fuer F1 2015 - F1 23
 REM  https://github.com/kersex/KERS_Mods
 REM
-REM  Einfach doppelklicken. Der Installer
+REM  Einfach doppelklicken. Das Tool
 REM    * erkennt die angeschlossene MOZA Wheelbase (VID 346E) automatisch
-REM      und fragt nach, wenn keine gefunden wird
-REM    * sucht alle installierten F1-Spiele (Steam / EA / Origin / Epic)
+REM      und installiert den Wheel-Fix in jedes gefundene F1-Spiel
 REM    * laesst dich waehlen, als welches Lenkrad die Base emuliert wird
-REM    * installiert die Actionmap in jedes gewaehlte Spiel (mit Backup)
+REM    * sichert und stellt Grafik-/Spiel-Einstellungen wieder her (Presets)
+REM    * zeigt, was in "Dokumente\My Games" liegt (Diagnose)
 REM
 REM  Diese Datei ist gleichzeitig Batch- und PowerShell-Skript:
 REM  der Batch-Teil startet PowerShell, der Rest ab #@PSBEGIN@ ist der Code.
 REM =====================================================================
 setlocal EnableExtensions
-title KERS Mods - MOZA F1 AutoInstaller
+title KERS F1 Mods Installer
 set "KERS_SELF=%~f0"
 
 where powershell.exe >nul 2>&1
@@ -30,14 +30,14 @@ endlocal & exit /b %RC%
 
 #@PSBEGIN@
 # =====================================================================
-#  KERS Mods - MOZA Wheelbase AutoInstaller fuer F1 2015 - F1 23
+#  KERS F1 Mods Installer - Werkzeugkasten fuer F1 2015 - F1 23
 #  https://github.com/kersex/KERS_Mods
 #
-#  - erkennt die angeschlossene MOZA Wheelbase automatisch (VID 346E)
-#  - findet alle installierten F1-Spiele (Steam / EA / Origin / Epic)
-#  - installiert die Wheel-Fix Actionmap in jedes gewaehlte Spiel
-#  - Lenkrad-Emulation frei waehlbar (z.B. als Fanatec / Logitech /
-#    Thrustmaster) oder native MOZA-Map (KERS-Map)
+#  - MOZA Wheel-Fix: Base erkennen (VID 346E), Actionmap in jedes
+#    gefundene F1-Spiel schreiben, Lenkrad-Emulation frei waehlbar
+#  - Presets: Grafik- und Spiel-Einstellungen sichern und
+#    wiederherstellen (Dokumente\My Games\F1 20xx)
+#  - Diagnose: zeigt, welche Einstellungsdateien ein Spiel anlegt
 # =====================================================================
 
 $ErrorActionPreference = 'Stop'
@@ -49,9 +49,10 @@ if (-not $script:DataDir) { $script:DataDir = $env:TEMP }
 if (-not $script:DataDir) { $script:DataDir = '.' }
 $script:LogFile     = Join-Path $script:DataDir 'KERS_Mods\moza_f1_installer.log'
 $script:Manifest    = Join-Path $script:DataDir 'KERS_Mods\moza_f1_install.json'
+$script:PresetRoot  = Join-Path $script:DataDir 'KERS_Mods\presets'
 $script:Stamp       = Get-Date -Format 'yyyyMMdd_HHmmss'
 
-try { $Host.UI.RawUI.WindowTitle = 'KERS Mods - MOZA F1 AutoInstaller' } catch { }
+try { $Host.UI.RawUI.WindowTitle = 'KERS F1 Mods Installer' } catch { }
 
 # ---------------------------------------------------------------------
 #  bekannte MOZA Product-IDs (VID 346E).  Die PID wird am Geraet
@@ -96,8 +97,8 @@ function Show-Banner {
     try { Clear-Host } catch { }
     Write-Host ''
     Write-Host '  ==============================================================' -ForegroundColor Cyan
-    Write-Host '   KERS Mods - MOZA Wheelbase AutoInstaller' -ForegroundColor White
-    Write-Host '   F1 2015 - F1 23   |   Wheel-Fix + Lenkrad-Emulation' -ForegroundColor Gray
+    Write-Host '   KERS F1 Mods Installer' -ForegroundColor White
+    Write-Host '   F1 2015 - F1 23   |   Wheel-Fix, Presets, Diagnose' -ForegroundColor Gray
     Write-Host ('   v' + $script:KersVersion + '   github.com/kersex/KERS_Mods') -ForegroundColor DarkGray
     Write-Host '  ==============================================================' -ForegroundColor Cyan
 }
@@ -1138,7 +1139,199 @@ function Select-Games {
 }
 
 # ---------------------------------------------------------------------
-#  6) Hauptablauf
+#  6) Benutzer-Ordner: Dokumente\My Games\F1 20xx
+#     (Grafik- und Spieleinstellungen, teils auch Tastenbelegungen)
+# ---------------------------------------------------------------------
+function Get-F1UserDirs {
+    $roots = @()
+    try {
+        $d = [Environment]::GetFolderPath('MyDocuments')
+        if ($d) { $roots += ($d.TrimEnd('\') + '\My Games') }
+    } catch { }
+    if ($env:USERPROFILE) {
+        foreach ($sub in @('Documents\My Games', 'Dokumente\My Games',
+                           'OneDrive\Documents\My Games', 'OneDrive\Dokumente\My Games')) {
+            $roots += ($env:USERPROFILE.TrimEnd('\') + '\' + $sub)
+        }
+    }
+    $seen = @{}
+    $out = @()
+    foreach ($r in ($roots | Select-Object -Unique)) {
+        try {
+            if (-not (Test-Path -LiteralPath $r)) { continue }
+            foreach ($d in (Get-ChildItem -LiteralPath $r -Directory -ErrorAction SilentlyContinue)) {
+                if ($d.Name -notmatch $script:F1FolderPattern) { continue }
+                $key = $d.FullName.ToLower()
+                if ($seen.ContainsKey($key)) { continue }
+                $seen[$key] = $true
+                $title = Get-F1Title $d.Name
+                if (-not $title) { $title = $d.Name }
+                $out += [pscustomobject]@{ Title = $title; Path = $d.FullName }
+            }
+        } catch { }
+    }
+    return ($out | Sort-Object Title)
+}
+
+function Select-UserGame {
+    param([string]$Zweck)
+    $dirs = @(Get-F1UserDirs)
+    if ($dirs.Count -eq 0) {
+        Write-Host ''
+        Write-Host '  [!] Unter "Dokumente\My Games" wurde kein F1-Ordner gefunden.' -ForegroundColor Yellow
+        Write-Host '      Den legt das Spiel beim ersten Start an.' -ForegroundColor DarkGray
+        return $null
+    }
+    Write-Host ''
+    Write-Host ('  Welches Spiel? (' + $Zweck + ')') -ForegroundColor White
+    for ($i = 0; $i -lt $dirs.Count; $i++) {
+        Write-Host ('   {0,2}) {1,-9} {2}' -f ($i + 1), $dirs[$i].Title, $dirs[$i].Path)
+    }
+    $sel = Read-Choice '  Auswahl' 1 $dirs.Count
+    return $dirs[$sel - 1]
+}
+
+# gesichert werden die Einstellungs-Ordner - Savegames bleiben aussen vor
+$script:PresetFolders = @('hardwaresettings', 'actionmaps', 'graphicsconfig', 'settings')
+
+function Save-Preset {
+    param($UserGame, [string]$Label, [switch]$Quiet)
+    $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+    $name = ($stamp + '_' + (ConvertTo-SafeName $Label))
+    $dest = Join-Path (Join-Path $script:PresetRoot (ConvertTo-SafeName $UserGame.Title)) $name
+    $files = 0
+    try {
+        New-Item -ItemType Directory -Path $dest -Force | Out-Null
+        foreach ($sub in $script:PresetFolders) {
+            $src = Join-Path $UserGame.Path $sub
+            if (-not (Test-Path -LiteralPath $src)) { continue }
+            Copy-Item -LiteralPath $src -Destination $dest -Recurse -Force
+            $files += @(Get-ChildItem -LiteralPath (Join-Path $dest $sub) -Recurse -File -ErrorAction SilentlyContinue).Count
+        }
+    } catch {
+        Write-Host ('      [FEHLER] ' + $_.Exception.Message) -ForegroundColor Red
+        return $null
+    }
+    if ($files -eq 0) {
+        Remove-Item -LiteralPath $dest -Recurse -Force -ErrorAction SilentlyContinue
+        if (-not $Quiet) {
+            Write-Host '  [!] Nichts zu sichern - das Spiel hat noch keine Einstellungen abgelegt.' -ForegroundColor Yellow
+        }
+        return $null
+    }
+    Write-Log ('Preset gesichert: ' + $dest + ' (' + $files + ' Dateien)')
+    if (-not $Quiet) {
+        Write-Host ('  [OK] ' + $files + ' Dateien gesichert') -ForegroundColor Green
+        Write-Host ('       ' + $dest) -ForegroundColor DarkGray
+    }
+    return $dest
+}
+
+function Invoke-SavePreset {
+    Write-Head 'Einstellungen sichern'
+    Write-Host '  Gesichert wird, was das Spiel in "Dokumente\My Games" ablegt:' -ForegroundColor Gray
+    Write-Host '  Grafik- und Spieleinstellungen, Force-Feedback, Tastenbelegungen,' -ForegroundColor Gray
+    Write-Host '  soweit sie dort als Datei liegen. Savegames bleiben unberuehrt.' -ForegroundColor Gray
+    $g = Select-UserGame 'sichern'
+    if (-not $g) { return }
+    Write-Host ''
+    Write-Host '  Kurzer Name fuer das Preset (z.B. mein_setup) : ' -NoNewline -ForegroundColor Yellow
+    $label = (Read-Line).Trim()
+    if ($label -eq '') { $label = 'preset' }
+    Write-Host ''
+    [void](Save-Preset -UserGame $g -Label $label)
+}
+
+function Invoke-RestorePreset {
+    Write-Head 'Preset wiederherstellen'
+    $g = Select-UserGame 'wiederherstellen'
+    if (-not $g) { return }
+    $dir = Join-Path $script:PresetRoot (ConvertTo-SafeName $g.Title)
+    $sets = @()
+    if (Test-Path -LiteralPath $dir) {
+        $sets = @(Get-ChildItem -LiteralPath $dir -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending)
+    }
+    if ($sets.Count -eq 0) {
+        Write-Host ''
+        Write-Host ('  [!] Fuer ' + $g.Title + ' wurde noch kein Preset gesichert.') -ForegroundColor Yellow
+        return
+    }
+    Write-Host ''
+    Write-Host '  Gesicherte Presets:' -ForegroundColor White
+    for ($i = 0; $i -lt $sets.Count; $i++) {
+        $n = @(Get-ChildItem -LiteralPath $sets[$i].FullName -Recurse -File -ErrorAction SilentlyContinue).Count
+        Write-Host ('   {0,2}) {1,-34} {2} Dateien' -f ($i + 1), $sets[$i].Name, $n)
+    }
+    $sel = Read-Choice '  Auswahl' 1 $sets.Count
+    $pick = $sets[$sel - 1]
+
+    Write-Host ''
+    Write-Host '  Sichere zuerst den aktuellen Stand ...' -ForegroundColor DarkGray
+    [void](Save-Preset -UserGame $g -Label 'vor_wiederherstellung' -Quiet)
+
+    $n = 0
+    foreach ($sub in (Get-ChildItem -LiteralPath $pick.FullName -Directory -ErrorAction SilentlyContinue)) {
+        try {
+            Copy-Item -LiteralPath $sub.FullName -Destination $g.Path -Recurse -Force
+            $n += @(Get-ChildItem -LiteralPath $sub.FullName -Recurse -File -ErrorAction SilentlyContinue).Count
+            Write-Host ('      [OK] ' + $sub.Name) -ForegroundColor Green
+        } catch {
+            Write-Host ('      [FEHLER] ' + $sub.Name + ': ' + $_.Exception.Message) -ForegroundColor Red
+        }
+    }
+    Write-Log ('Preset wiederhergestellt: ' + $pick.FullName)
+    Write-Host ''
+    Write-Host ('  ' + $n + ' Dateien zurueckgespielt nach ' + $g.Path) -ForegroundColor Green
+    Write-Host '  Der Stand von vorher liegt als Preset "vor_wiederherstellung" daneben.' -ForegroundColor DarkGray
+}
+
+function Invoke-Report {
+    Write-Head 'Diagnose - was legt das Spiel an?'
+    $dirs = @(Get-F1UserDirs)
+    $lines = @()
+    $lines += ('KERS F1 Mods Installer - Diagnose vom ' + (Get-Date -Format 'yyyy-MM-dd HH:mm'))
+    $lines += ''
+    if ($dirs.Count -eq 0) {
+        $lines += 'Unter "Dokumente\My Games" wurde kein F1-Ordner gefunden.'
+    }
+    foreach ($d in $dirs) {
+        $lines += ('=== ' + $d.Title + ' ===')
+        $lines += ('  ' + $d.Path)
+        foreach ($f in (Get-ChildItem -LiteralPath $d.Path -File -ErrorAction SilentlyContinue)) {
+            $lines += ('  [Datei]   {0,-42} {1,8} Byte   {2}' -f $f.Name, $f.Length, $f.LastWriteTime.ToString('yyyy-MM-dd'))
+        }
+        foreach ($s in (Get-ChildItem -LiteralPath $d.Path -Directory -ErrorAction SilentlyContinue)) {
+            $inner = @(Get-ChildItem -LiteralPath $s.FullName -Recurse -File -ErrorAction SilentlyContinue)
+            $lines += ('  [Ordner]  {0,-42} {1} Dateien' -f $s.Name, $inner.Count)
+            foreach ($f in ($inner | Sort-Object FullName | Select-Object -First 25)) {
+                $rel = $f.FullName.Substring($d.Path.Length).TrimStart('\')
+                $lines += ('      {0,-52} {1,8} Byte   {2}' -f $rel, $f.Length, $f.LastWriteTime.ToString('yyyy-MM-dd'))
+            }
+            if ($inner.Count -gt 25) { $lines += ('      ... und ' + ($inner.Count - 25) + ' weitere') }
+        }
+        $lines += ''
+    }
+    foreach ($l in $lines) {
+        if ($l -match '^===') { Write-Host ('  ' + $l) -ForegroundColor White }
+        elseif ($l -match '\[Ordner\]') { Write-Host ('  ' + $l) -ForegroundColor Cyan }
+        else { Write-Host ('  ' + $l) -ForegroundColor Gray }
+    }
+    $target = $null
+    try {
+        $desk = [Environment]::GetFolderPath('Desktop')
+        if ($desk) {
+            $target = Join-Path $desk 'KERS_F1_Diagnose.txt'
+            Set-Content -Path $target -Value $lines -Encoding UTF8
+        }
+    } catch { $target = $null }
+    Write-Host ''
+    if ($target) {
+        Write-Host ('  [OK] Als Datei gespeichert: ' + $target) -ForegroundColor Green
+    }
+}
+
+# ---------------------------------------------------------------------
+#  7) Hauptablauf
 # ---------------------------------------------------------------------
 function Invoke-Main {
     Show-Banner
@@ -1154,12 +1347,23 @@ function Invoke-Main {
     }
 
     Write-Host ''
-    Write-Host '   1) Mod installieren' -ForegroundColor White
-    Write-Host '   2) Mod deinstallieren (Originalzustand)' -ForegroundColor White
-    Write-Host '   3) Nur testen (nichts schreiben)' -ForegroundColor White
-    Write-Host '   4) Beenden' -ForegroundColor White
-    $mode = Read-Choice '  Auswahl' 1 4 1
-    if ($mode -eq 4) { return 0 }
+    Write-Host '   MOZA Wheel-Fix' -ForegroundColor DarkGray
+    Write-Host '   1) installieren' -ForegroundColor White
+    Write-Host '   2) deinstallieren (Originalzustand)' -ForegroundColor White
+    Write-Host '   3) nur testen (nichts schreiben)' -ForegroundColor White
+    Write-Host '' 
+    Write-Host '   Einstellungen (Dokumente\My Games)' -ForegroundColor DarkGray
+    Write-Host '   4) Grafik-/Spiel-Einstellungen sichern' -ForegroundColor White
+    Write-Host '   5) gesichertes Preset wiederherstellen' -ForegroundColor White
+    Write-Host '   6) Diagnose: was legt das Spiel an?' -ForegroundColor White
+    Write-Host ''
+    Write-Host '   7) Beenden' -ForegroundColor White
+    $mode = Read-Choice '  Auswahl' 1 7 1
+    if ($mode -eq 7) { return 0 }
+
+    if ($mode -eq 4) { Invoke-SavePreset;    return 0 }
+    if ($mode -eq 5) { Invoke-RestorePreset; return 0 }
+    if ($mode -eq 6) { Invoke-Report;        return 0 }
 
     if ($mode -eq 2) {
         $games = @(Select-Games)

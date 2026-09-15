@@ -2,11 +2,24 @@
 
 Mods for some Games
 
-## MOZA Wheelbase AutoInstaller fuer F1 2015 - F1 23
+## KERS F1 Mods Installer (F1 2015 - F1 23)
 
-`KERS_Mod_F1_MOZA_AutoInstaller.cmd`
+`KERS_F1_Mods_Installer.cmd` - eine Datei, Doppelklick. Enthaelt den
+MOZA Wheel-Fix und die Einstellungs-Werkzeuge.
 
-Eine einzige Datei - Doppelklick genuegt. Der Installer
+```
+   MOZA Wheel-Fix
+   1) installieren
+   2) deinstallieren (Originalzustand)
+   3) nur testen (nichts schreiben)
+
+   Einstellungen (Dokumente\My Games)
+   4) Grafik-/Spiel-Einstellungen sichern
+   5) gesichertes Preset wiederherstellen
+   6) Diagnose: was legt das Spiel an?
+```
+
+### MOZA Wheel-Fix
 
 * **erkennt die angeschlossene MOZA Wheelbase automatisch** (USB VID `346E`)
   und liest die Product-ID direkt am Geraet aus. Wird nichts gefunden,
@@ -23,23 +36,6 @@ Eine einzige Datei - Doppelklick genuegt. Der Installer
   **`KERS_R5_F1_MOD`** - so steht sie in der Geraeteliste des Spiels.
 * **installiert die Actionmap in jedes gewaehlte Spiel** als
   `actionmaps\KERS_R5_F1_MOD.xml`, inklusive Backup und Log.
-
-### Bedienung
-
-1. `KERS_Mod_F1_MOZA_AutoInstaller.cmd` doppelklicken
-   (am besten gleich *Als Administrator ausfuehren* - der Installer bietet
-   den Neustart mit Adminrechten aber auch selbst an; ohne sie kann in
-   `Program Files` nicht geschrieben werden).
-2. Im Menue waehlen:
-   * `1` Mod installieren
-   * `2` Mod deinstallieren (Originalzustand wiederherstellen)
-   * `3` nur testen - zeigt an, was passieren wuerde, schreibt aber nichts
-3. Wheelbase bestaetigen, Spiele auswaehlen (Enter = alle), Lenkrad
-   auswaehlen - fertig.
-4. Im Spiel unter *Einstellungen -> Steuerung* das Geraet auswaehlen und
-   die Belegung pruefen.
-
-### Was genau passiert
 
 Die F1-Spiele erkennen nur Lenkraeder, die in `actionmaps\*.xml` mit ihrer
 DirectInput-GUID hinterlegt sind. Die GUID hat das Format
@@ -58,15 +54,37 @@ Datei dazu.
 * Backup vorhandener MOZA-Dateien (auch aelterer `moza_*.xml`):
   `...xml.kersbak_<zeitstempel>`
 * Log: `%LOCALAPPDATA%\KERS_Mods\moza_f1_installer.log`
-* Uebersicht der Installationen: `%LOCALAPPDATA%\KERS_Mods\moza_f1_install.json`
 
 Deinstallation (Menuepunkt `2`) erkennt MOZA-Actionmaps an ihrer GUID -
 unabhaengig vom Dateinamen - und entfernt sie samt Backups wieder. Das
 Spiel ist damit exakt im Auslieferungszustand.
 
+### Einstellungen sichern und wiederherstellen
+
+Menuepunkt `4` sichert, was ein Spiel unter
+`Dokumente\My Games\F1 20xx` ablegt - Grafik- und Spieleinstellungen,
+Force-Feedback, und Tastenbelegungen, soweit sie dort als Datei liegen.
+Gesichert werden die Ordner `hardwaresettings`, `actionmaps`,
+`graphicsconfig` und `settings`; **Savegames bleiben unberuehrt**.
+
+* Preset-Ablage: `%LOCALAPPDATA%\KERS_Mods\presets\<Spiel>\<zeitstempel>_<name>`
+* Menuepunkt `5` spielt ein Preset zurueck und legt vorher automatisch
+  eine Sicherung des aktuellen Stands als `vor_wiederherstellung` an.
+
+Nuetzlich nach einem Spiel-Patch, der die Grafikeinstellungen
+zuruecksetzt, oder vor dem Ausprobieren neuer Settings.
+
+### Diagnose
+
+Menuepunkt `6` listet, welche Dateien und Ordner das jeweilige Spiel unter
+`Dokumente\My Games` tatsaechlich angelegt hat, und schreibt die Liste
+zusaetzlich als `KERS_F1_Diagnose.txt` auf den Desktop. Damit laesst sich
+klaeren, welche Einstellungen ein Spiel ueberhaupt als Datei ablegt und
+welche im (Cloud-)Savegame stecken.
+
 ### Aeltere Einzel-Skripte
 
 `KERS_Mod_f1-2021_moza_r3.cmd` und `KERS_Mod_f1-2021_moza_r5.cmd`
-installieren die native MOZA-Map fest fuer F1 2021. Der AutoInstaller
+installieren die native MOZA-Map fest fuer F1 2021. Der Installer
 kann das ebenfalls (Lenkrad-Auswahl `0` = *MOZA nativ*), zusaetzlich aber
 jedes andere F1-Spiel und jedes Modell.
