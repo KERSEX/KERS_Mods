@@ -7,6 +7,7 @@ REM  Einfach doppelklicken. Das Tool
 REM    * erkennt die angeschlossene MOZA Wheelbase (VID 346E) automatisch
 REM      und installiert den Wheel-Fix in jedes gefundene F1-Spiel
 REM    * laesst dich waehlen, als welches Lenkrad die Base emuliert wird
+REM    * setzt das KERS-Grafik-Preset (FSR oder DLSS je nach GPU, UDP an)
 REM    * sichert und stellt Grafik-/Spiel-Einstellungen wieder her (Presets)
 REM    * zeigt, was in "Dokumente\My Games" liegt (Diagnose)
 REM
@@ -1331,7 +1332,313 @@ function Invoke-Report {
 }
 
 # ---------------------------------------------------------------------
-#  7) Hauptablauf
+#  eingebettetes KERS-Grafik-Preset (presets/f1_25_kers_settings.xml)
+# ---------------------------------------------------------------------
+$script:PresetXmlB64 = @'
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiID8+CjxoYXJkd2FyZV9zZXR0aW5nc19jb25maWcgYXBwbHlPT1RCPSJmYWxzZSI+Cgk8Y3B1
+IG5hbWU9IiIgcHJvY2Vzc29ycz0iMCIgcHJvY2Vzc29yU3RyaWRlPSIxIiBwcm9jZXNzb3JCaW5kaW5nPSIxIiAvPgoJPGdyYXBoaWNzX2NhcmQgZGV2aWNl
+SWQ9IjB4MDAwMCI+CgkJPHJlc29sdXRpb24gd2lkdGg9IjE5MjAiIGhlaWdodD0iMTA4MCIgZGlzcGxheU1vZGU9IjIiIHZzeW5jPSJmYWxzZSIgdnN5bmNJ
+bnRlcnZhbD0iYXV0byIgZnJhbWVSYXRlTGltaXRlckVuYWJsZWQ9ImZhbHNlIiBmcmFtZVJhdGVMaW1pdGVyVmFsdWU9IjAiPgoJCQk8cmVmcmVzaFJhdGUg
+bnVtZXJhdG9yPSI2MDAwMCIgZGVub21pbmF0b3I9IjEwMDAiIC8+CgkJCTx3aW5kb3dQb3NpdGlvbiB4PSIwIiB5PSIwIiAvPgoJCQk8b3V0cHV0TW9uaXRv
+ciBpbmRleD0iMSIgLz4KCQkJPGFzcGVjdFJhdGlvIGF1dG89InRydWUiIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIC8+CgkJCTxoZHIgbW9kZT0iMCIgcGVha05p
+dHM9IjEwMDAiIC8+CgkJPC9yZXNvbHV0aW9uPgoJPC9ncmFwaGljc19jYXJkPgoJPG1vdGlvbj4KCQk8ZGJveCBlbmFibGVkPSJmYWxzZSIgLz4KCQk8dWRw
+IGVuYWJsZWQ9InRydWUiIGJyb2FkY2FzdD0iZmFsc2UiIGlwPSIxMjcuMC4wLjEiIHBvcnQ9IjIyMDI1IiBzZW5kUmF0ZT0iNjAiIGZvcm1hdD0iMjAyNiIg
+eW91clRlbGVtZXRyeT0icmVzdHJpY3RlZCIgb25saW5lTmFtZXM9Im9uIiAvPgoJPC9tb3Rpb24+Cgk8YW50aWFsaWFzaW5nIHRhYT0iZmFsc2UiIGNhcz0i
+MSIgZGxzcz0idHJ1ZSIgZnNyMz0iMCIgeGVzcz0iZmFsc2UiIC8+Cgk8YWFfcXVhbGl0eSB2YWx1ZT0iMyIgLz4KCTxhYV9zaGFycG5lc3MgdmFsdWU9IjAu
+NSIgLz4KCTxmcmFtZV9nZW4gbW9kZT0iMCIgLz4KCTxtdWx0aV9mcmFtZV9nZW4gdmFsdWU9IjAiIC8+Cgk8ZHluYW1pY3Jlc29sdXRpb25fZW5hYmxlZCB2
+YWx1ZT0iZmFsc2UiIC8+Cgk8ZHluYW1pY3Jlc29sdXRpb25fdGFyZ2V0X2ZwcyB2YWx1ZT0iMTIwIiAvPgoJPGR5bmFtaWNyZXNvbHV0aW9uX3Byb2ZpbGUg
+ZGVsdGFEb3duPSIwLjAyIiBwZXJjZW50YWdlRG93bj0iMC45NzUiIGRlbHRhVXA9IjAuMDEiIHBlcmNlbnRhZ2VVcD0iMC45MjUiIGFscGhhPSIwLjk1IiAv
+PgoJPGR5bmFtaWNyZXNvbHV0aW9uX21pbl9zY2FsZSB2YWx1ZT0iMC45MDAwMDAiIC8+Cgk8c3NhbyBlbmFibGVkPSJ0cnVlIiBhbGdvcml0aG09IjMiIC8+
+Cgk8c3NydCBlbmFibGVkPSJ0cnVlIiBxdWFsaXR5PSIyIiAvPgoJPHRleHR1cmVfc3RyZWFtaW5nIHNpemVJbk1pQj0iMTUzNiIgdGV4ZWxEZW5zaXR5Qmlh
+cz0iMC4wIiBjb25jdXJyZW50VGV4dHVyZVN3YXBzPSIxIiAvPgoJPGxlZF9kaXNwbGF5IGZhbmF0ZWNOYXRpdmVTdXBwb3J0PSJmYWxzZSIgc2xpUHJvTmF0
+aXZlU3VwcG9ydD0iZmFsc2UiIHNsaVByb0ZvcmNlQnJpZ2h0bmVzcz0iMTI3IiB3b290aW5nUkdCRW5hYmxlZD0iZmFsc2UiIC8+Cgk8YW5pc290cm9waWNf
+ZmlsdGVyIGxldmVsPSIxNiIgLz4KCTxsaWdodGluZyBxdWFsaXR5PSIxIiB2b2x1bWV0cmljRm9nPSJ0cnVlIiB2b2x1bWV0cmljRm9nTWFwV2lkdGg9IjUx
+MiIgdm9sdW1ldHJpY0ZvZ01hcEhlaWdodD0iMjU2IiAvPgoJPHBvc3Rwcm9jZXNzIG1vdGlvbkJsdXI9InRydWUiIGdvZFJheXM9ImZhbHNlIiBkZXB0aE9m
+RmllbGQ9ImZhbHNlIiBsZW5zU3RyZWFrPSJmYWxzZSIgbGVuc0ZsYXJlPSJmYWxzZSIgYmxvb209ImZhbHNlIiBtb3Rpb25CbHVyVjI9ImZhbHNlIiAvPgoJ
+PHNoYWRvd3MgZW5hYmxlZD0idHJ1ZSIgc2t5U2hhZG93TWFwU2l6ZT0iMTAyNCIgc2t5U2hhZG93Q2FzY2FkZUNvdW50PSI0IiBza3lTaGFkb3dMb3dMb2Q9
+ImZhbHNlIiB3b3JsZFNoYWRvd01hcFNpemU9IjEwMjQiIHNreVNoYWRvd01hcDMyQml0cz0iZmFsc2UiIG5pZ2h0U2hhZG93TWFwU2l6ZT0iMTAyNCIgbmln
+aHRTaGFkb3dDaGFyYWN0ZXJDYXN0PSJ0cnVlIiBuaWdodFNoYWRvd1NvdXJjZUNvdW50PSI0IiBzYW1wbGluZz0iMSIgc3BvdFNoYWRvd01hcFNpemU9IjEw
+MjQiIHNwb3RTaGFkb3dTYW1wbGluZz0iMSIgY3Jvd2RJblNoYWRvd3M9ImZhbHNlIiAvPgoJPHBhcnRpY2xlcyBlbmFibGVkPSJ0cnVlIiBkaXN0YW5jZVNj
+YWxlPSIxLjAiIHJhdGU9IjEuMCIgaGlnaD0idHJ1ZSIgLz4KCTxjcm93ZCBkaXN0YW5jZVNjYWxlPSIzLjAiIGJpbGxib2FyZERpc3RhbmNlPSIxNTAwIiAv
+PgoJPHZlaGljbGVfcmVmbGVjdGlvbnMgZW52TWFwU2NhbGU9IjAuMjUiIGVudk1hcFVwZGF0ZU1vZGU9ImFsdGVybmF0ZSIgZW52TWFwUmVuZGVyTW9kZT0i
+Y2FycyIgY3ViZU1hcEVuYWJsZWQ9InRydWUiIGN1YmVNYXBTY2FsZT0iMC41IiBjdWJlTWFwVXBkYXRlTW9kZT0ib25lRmFjZVBlckZyYW1lIiAvPgoJPG1p
+cnJvcnMgbWlycm9yc1VwZGF0ZU1vZGU9ImFsdGVybmF0ZSIgbWlycm9yc1JlbmRlck1vZGU9ImNhcnMiIHRyZWVzSW5NaXJyb3JzPSJ0cnVlIiBjcm93ZElu
+TWlycm9ycz0iZmFsc2UiIGhpZ2hEZXRhaWxNaXJyb3JzPSJmYWxzZSIgaGlnaERldGFpbFR5cmVzQW5kQ2FyPSJmYWxzZSIgcGFydGljbGVzSW5NaXJyb3Jz
+PSJmYWxzZSIgLz4KCTx3ZWF0aGVyX2VmZmVjdHMgcmFpblNwbGFzaGVzPSJ0cnVlIiByYWluU2hlZXRzPSJmYWxzZSIgcmFpbkJlYWRzPSJmYWxzZSIgcmFp
+bkhpZ2g9ImZhbHNlIiB0cmFja0hlYXRIYXplPSJ0cnVlIiBwbGFuYXJSZWZsZWN0aW9uc0VuYWJsZWQ9InRydWUiIHBsYW5hclJlZmxlY3Rpb25zSFFFbmFi
+bGVkPSJmYWxzZSIgcGxhbmFyUmVmbGVjdGlvbnNSYW5nZVNjYWxlPSIxLjAiIHBsYW5hclJlZmxlY3Rpb25zUlRTY2FsZT0iMC41IiBwbGFuYXJSZWZsZWN0
+aW9uc01pcFRhaWxCbHVyPSJ0cnVlIiBwcm9jZWR1cmFsQ2xvdWRSVFNjYWxlPSIxLjAiIHByb2NlZHVyYWxDbG91ZFRpbGluZz0iNyIgcHJvY2VkdXJhbENs
+b3VkUXVhbGl0eT0iMSIgLz4KCTxncm91bmRfY292ZXIgZW5hYmxlZD0idHJ1ZSIgZ3Jhc3NGbGF0dGVuaW5nPSJmYWxzZSIgZHJhd0Rpc3RhbmNlPSI2MC4w
+IiBtZXNoZXM9ImZhbHNlIiAvPgoJPHRyZWVzIHVzZUxPRDA9ImZhbHNlIiBkaXN0YW5jZVNjYWxlPSIxLjAiIC8+Cgk8aGFpciBlbmFibGVkPSJmYWxzZSIg
+Lz4KCTxza2lkbWFya3MgZW5hYmxlZD0idHJ1ZSIgcGFyYWxsYXg9ImZhbHNlIiAvPgoJPHNraWRtYXJrc19ibGVuZGluZyBlbmFibGVkPSJmYWxzZSIgLz4K
+CTxhdWRpbyBhdWRpb1VwZGF0ZVJhdGU9IjIiIG51bV9qb2Jfd29ya2VyX3RocmVhZHM9IjEyIiAvPgoJPGFzeW5jX2NvbXB1dGUgZW5hYmxlZD0idHJ1ZSIg
+Lz4KCTxjc19jdWxsaW5nIGVuYWJsZWQ9ImZhbHNlIiAvPgoJPHZlbmRvcl9zaGFkZXJfcGFjayBlbmFibGVkPSJ0cnVlIiAvPgoJPHJlcGxheV9kaXJlY3Rv
+cnkgcGF0aD0iIiAvPgoJPHJ0X3BhdGh0cmFjZSBlbmFibGVkPSJmYWxzZSIgLz4KCTxydF9yYXlfcmVjb25zdHJ1Y3Rpb24gZW5hYmxlZD0iZmFsc2UiIC8+
+Cgk8cnRfc2hhZG93cyBlbmFibGVkPSJmYWxzZSIgLz4KCTxydF9yZWZsZWN0aW9ucyBlbmFibGVkPSJmYWxzZSIgLz4KCTxydF90cmFuc3BhcmVudF9yZWZs
+ZWN0aW9ucyBlbmFibGVkPSJmYWxzZSIgLz4KCTxydF9hbyBlbmFibGVkPSJmYWxzZSIgLz4KCTxydF9kZGdpIGVuYWJsZWQ9ImZhbHNlIiAvPgoJPHJ0X3Zl
+cnNpb24gdmVyc2lvbj0iMCIgLz4KCTx2cnMgZW5hYmxlZD0idHJ1ZSIgLz4KCTxyZWZsZXggbW9kZT0iMiIgLz4KCTxzZXIgZW5hYmxlZD0iZmFsc2UiIC8+
+Cgk8Y2EgZW5hYmxlZD0iZmFsc2UiIC8+CjwvaGFyZHdhcmVfc2V0dGluZ3NfY29uZmlnPg==
+'@
+
+# ---------------------------------------------------------------------
+#  KERS-Grafik-Preset (aus F1 25 / F1 26)
+#
+#  Uebernommen werden nur Werte, die es im Zielspiel auch wirklich gibt.
+#  Alles Hardwareabhaengige bleibt so, wie es auf diesem Rechner steht:
+#  CPU, Aufloesung/Monitor/HDR/FPS-Limit, GPU-ID, Texturspeicher,
+#  Audio-Threads, LED-Displays und der Replay-Ordner.
+# ---------------------------------------------------------------------
+$script:KeepNodes = @(
+    '/hardware_settings_config/cpu',
+    '/hardware_settings_config/graphics_card/resolution',
+    '/hardware_settings_config/led_display',
+    '/hardware_settings_config/replay_directory'
+)
+$script:KeepAttrs = @{
+    '/hardware_settings_config/graphics_card'     = @('deviceId')
+    '/hardware_settings_config/audio'             = @('num_job_worker_threads')
+    '/hardware_settings_config/texture_streaming' = @('sizeInMiB')
+    '/hardware_settings_config/motion/udp'        = @('format')
+}
+
+# Upscaling-Stufe: 0=Ultra Performance, 1=Performance, 2=Ausgewogen,
+# 3=Qualitaet, 4=Ultra Qualitaet
+$script:UpscaleBalanced = '2'
+
+function Get-KersPreset {
+    $b64 = ($script:PresetXmlB64 -replace '\s', '')
+    $text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b64))
+    $doc = New-Object System.Xml.XmlDocument
+    $doc.PreserveWhitespace = $true
+    $doc.LoadXml($text)
+    return $doc
+}
+
+function New-MergeLog {
+    return [pscustomobject]@{
+        Set     = 0
+        Kept    = 0
+        Skipped = 0
+        Changes = (New-Object System.Collections.ArrayList)
+    }
+}
+
+function Test-KeepNode {
+    param([string]$Path)
+    foreach ($k in $script:KeepNodes) {
+        if ($Path -eq $k -or $Path.StartsWith($k + '/')) { return $true }
+    }
+    return $false
+}
+
+function Set-AttrIfPresent {
+    param($Node, [string]$Name, [string]$Value, $Log, [string]$Path)
+    if ($null -eq $Node) { return }
+    $a = $Node.get_Attributes()[$Name]
+    if ($null -eq $a) { $Log.Skipped++; return }      # kennt dieses Spiel nicht
+    $old = $a.get_Value()
+    if ($old -eq $Value) { return }
+    [void]$Log.Changes.Add(('{0}/@{1}:  {2}  ->  {3}' -f $Path.TrimStart('/'), $Name, $old, $Value))
+    $a.set_Value($Value)
+    $Log.Set++
+}
+
+function Merge-XmlValues {
+    param($Src, $Dst, [string]$Path, $Log)
+    # get_Name() statt .Name: PowerShell blendet bei XML-Elementen sonst
+    # gleichnamige Attribute ein (z.B. <cpu name="..."> -> .Name = "...")
+    foreach ($a in @($Src.get_Attributes())) {
+        $an = $a.get_Name()
+        $keep = $script:KeepAttrs[$Path]
+        if ($keep -and ($keep -contains $an)) { $Log.Kept++; continue }
+        Set-AttrIfPresent -Node $Dst -Name $an -Value $a.get_Value() -Log $Log -Path $Path
+    }
+    foreach ($child in @($Src.get_ChildNodes())) {
+        if ($child.get_NodeType() -ne [System.Xml.XmlNodeType]::Element) { continue }
+        $cn = $child.get_Name()
+        $cp = $Path + '/' + $cn
+        if (Test-KeepNode $cp) { $Log.Kept++; continue }
+        $dstChild = $Dst.SelectSingleNode($cn)
+        if ($null -eq $dstChild) { $Log.Skipped++; continue }
+        Merge-XmlValues -Src $child -Dst $dstChild -Path $cp -Log $Log
+    }
+}
+
+function Get-GpuName {
+    $names = @()
+    try {
+        $names = @(Get-CimInstance -ClassName Win32_VideoController -ErrorAction SilentlyContinue |
+                   ForEach-Object { [string]$_.Name })
+    } catch { }
+    $names = @($names | Where-Object { $_ -and ($_ -notmatch 'Basic Display|Remote Display|Virtual|Parsec|Citrix|Meta ') })
+    if ($names.Count -eq 0) { return '' }
+    $pref = @($names | Where-Object { $_ -match 'RTX|GTX|Radeon RX|Radeon Pro|Arc' })
+    if ($pref.Count -gt 0) { return $pref[0] }
+    return $names[0]
+}
+
+function Set-UpscalingForGpu {
+    param($Doc, [string]$Gpu, $Log)
+    $root = $Doc.DocumentElement
+    $pAA = '/hardware_settings_config/antialiasing'
+    if ($Gpu -match 'RTX') { return $false }
+
+    # keine RTX -> DLSS aus, FSR an, Stufe "ausgewogen"
+    $aa = $root.SelectSingleNode('antialiasing')
+    if ($null -eq $aa -or $null -eq $aa.get_Attributes()['fsr3']) {
+        # aeltere Spiele kennen kein FSR - dann nicht am AA herumdrehen
+        Write-Host '      [i] Dieses Spiel kennt kein FSR - Kantenglaettung bleibt wie im Preset.' -ForegroundColor DarkYellow
+        return $false
+    }
+    Set-AttrIfPresent -Node $aa -Name 'dlss' -Value 'false' -Log $Log -Path $pAA
+    Set-AttrIfPresent -Node $aa -Name 'xess' -Value 'false' -Log $Log -Path $pAA
+    Set-AttrIfPresent -Node $aa -Name 'taa'  -Value 'false' -Log $Log -Path $pAA
+    Set-AttrIfPresent -Node $aa -Name 'fsr3' -Value '1'     -Log $Log -Path $pAA
+    Set-AttrIfPresent -Node ($root.SelectSingleNode('aa_quality')) -Name 'value' `
+                      -Value $script:UpscaleBalanced -Log $Log -Path '/hardware_settings_config/aa_quality'
+
+    if ($Gpu -notmatch 'NVIDIA|GeForce|GTX') {
+        # laeuft nur auf NVIDIA - auf AMD/Intel sonst nutzlos eingeschaltet
+        Set-AttrIfPresent -Node ($root.SelectSingleNode('reflex')) -Name 'mode' -Value '0' -Log $Log -Path '/hardware_settings_config/reflex'
+        Set-AttrIfPresent -Node ($root.SelectSingleNode('frame_gen')) -Name 'mode' -Value '0' -Log $Log -Path '/hardware_settings_config/frame_gen'
+        Set-AttrIfPresent -Node ($root.SelectSingleNode('multi_frame_gen')) -Name 'value' -Value '0' -Log $Log -Path '/hardware_settings_config/multi_frame_gen'
+        Set-AttrIfPresent -Node ($root.SelectSingleNode('ser')) -Name 'enabled' -Value 'false' -Log $Log -Path '/hardware_settings_config/ser'
+        Set-AttrIfPresent -Node ($root.SelectSingleNode('rt_ray_reconstruction')) -Name 'enabled' -Value 'false' -Log $Log -Path '/hardware_settings_config/rt_ray_reconstruction'
+    }
+    return $true
+}
+
+function Set-AaFallback {
+    # Das Preset laesst TAA aus, weil DLSS laeuft. Kennt ein Spiel weder
+    # DLSS noch FSR noch XeSS, waere danach gar keine Kantenglaettung an -
+    # dann TAA wieder einschalten.
+    param($Doc, $Log)
+    $aa = $Doc.DocumentElement.SelectSingleNode('antialiasing')
+    if ($null -eq $aa) { return }
+    $attrs = $aa.get_Attributes()
+    $on = $false
+    foreach ($n in @('dlss', 'xess')) {
+        $a = $attrs[$n]
+        if ($a -and ($a.get_Value() -eq 'true')) { $on = $true }
+    }
+    $f = $attrs['fsr3']
+    if ($f -and ($f.get_Value() -ne '0') -and ($f.get_Value() -ne 'false')) { $on = $true }
+    if (-not $on) {
+        Set-AttrIfPresent -Node $aa -Name 'taa' -Value 'true' -Log $Log -Path '/hardware_settings_config/antialiasing'
+    }
+}
+
+function Set-UdpOn {
+    param($Doc, $Log)
+    $udp = $Doc.DocumentElement.SelectSingleNode('motion/udp')
+    if ($null -eq $udp) {
+        Write-Host '      [i] Dieses Spiel kennt keine UDP-Telemetrie - uebersprungen.' -ForegroundColor DarkYellow
+        return
+    }
+    $p = '/hardware_settings_config/motion/udp'
+    Set-AttrIfPresent -Node $udp -Name 'enabled'     -Value 'true' -Log $Log -Path $p
+    Set-AttrIfPresent -Node $udp -Name 'onlineNames' -Value 'on'   -Log $Log -Path $p
+}
+
+function Save-XmlFile {
+    param($Doc, [string]$Path)
+    # BOM-Zustand der Originaldatei beibehalten - das Spiel bekommt die
+    # Datei so zurueck, wie sein Parser sie kennt
+    $bom = $false
+    try {
+        $b = [IO.File]::ReadAllBytes($Path)
+        if ($b.Length -ge 3 -and $b[0] -eq 0xEF -and $b[1] -eq 0xBB -and $b[2] -eq 0xBF) { $bom = $true }
+    } catch { }
+    $set = New-Object System.Xml.XmlWriterSettings
+    $set.Encoding = New-Object System.Text.UTF8Encoding($bom)
+    $set.Indent = $false
+    $set.NewLineHandling = [System.Xml.NewLineHandling]::None
+    $w = $null
+    try {
+        $w = [System.Xml.XmlWriter]::Create($Path, $set)
+        $Doc.Save($w)
+    } finally {
+        if ($w) { $w.Close() }
+    }
+}
+
+function Invoke-ApplyPreset {
+    Write-Head 'KERS-Grafik-Preset anwenden'
+    Write-Host '  Qualitaets-Einstellungen kommen aus dem Preset, alles Hardware-' -ForegroundColor Gray
+    Write-Host '  abhaengige bleibt von dir: CPU, Aufloesung, Monitor, HDR, FPS-Limit,' -ForegroundColor Gray
+    Write-Host '  Texturspeicher, Audio-Threads, LED-Display, Replay-Ordner.' -ForegroundColor Gray
+
+    $gpu = Get-GpuName
+    Write-Host ''
+    if ($gpu) {
+        Write-Host ('  Grafikkarte : ' + $gpu) -ForegroundColor White
+    } else {
+        Write-Host '  Grafikkarte : nicht erkannt - wird wie "keine RTX" behandelt' -ForegroundColor Yellow
+    }
+    if ($gpu -match 'RTX') {
+        Write-Host '  Upscaling   : DLSS bleibt an (Preset-Einstellung)' -ForegroundColor DarkGray
+    } else {
+        Write-Host '  Upscaling   : keine RTX -> FSR an, Stufe "ausgewogen"' -ForegroundColor DarkGray
+    }
+    Write-Host '  Ausserdem   : UDP-Telemetrie an, Online-Namen an' -ForegroundColor DarkGray
+
+    $g = Select-UserGame 'Preset anwenden'
+    if (-not $g) { return }
+
+    $file = Join-Path $g.Path 'hardwaresettings\hardware_settings_config.xml'
+    if (-not (Test-Path -LiteralPath $file)) {
+        Write-Host ''
+        Write-Host ('  [!] ' + $file) -ForegroundColor Yellow
+        Write-Host '      gibt es nicht. Das Spiel muss einmal gestartet worden sein.' -ForegroundColor DarkGray
+        return
+    }
+
+    Write-Host ''
+    Write-Host '  Sichere den aktuellen Stand ...' -ForegroundColor DarkGray
+    [void](Save-Preset -UserGame $g -Label 'vor_kers_preset' -Quiet)
+
+    try {
+        $preset = Get-KersPreset
+        $target = New-Object System.Xml.XmlDocument
+        $target.PreserveWhitespace = $true
+        $target.Load($file)
+    } catch {
+        Write-Host ('  [FEHLER] XML konnte nicht gelesen werden: ' + $_.Exception.Message) -ForegroundColor Red
+        return
+    }
+
+    $log = New-MergeLog
+    Merge-XmlValues -Src $preset.DocumentElement -Dst $target.DocumentElement `
+                    -Path '/hardware_settings_config' -Log $log
+    [void](Set-UpscalingForGpu -Doc $target -Gpu $gpu -Log $log)
+    Set-AaFallback -Doc $target -Log $log
+    Set-UdpOn -Doc $target -Log $log
+
+    try {
+        Save-XmlFile -Doc $target -Path $file
+    } catch {
+        Write-Host ('  [FEHLER] Schreiben fehlgeschlagen: ' + $_.Exception.Message) -ForegroundColor Red
+        return
+    }
+    Write-Log ('Preset angewendet: ' + $file + ' (' + $log.Set + ' Werte, GPU: ' + $gpu + ')')
+
+    Write-Host ''
+    $show = [Math]::Min($log.Changes.Count, 25)
+    for ($i = 0; $i -lt $show; $i++) {
+        Write-Host ('      ' + $log.Changes[$i]) -ForegroundColor DarkGray
+    }
+    if ($log.Changes.Count -gt $show) {
+        Write-Host ('      ... und ' + ($log.Changes.Count - $show) + ' weitere') -ForegroundColor DarkGray
+    }
+    Write-Host ''
+    Write-Host ('  [OK] ' + $log.Set + ' Werte gesetzt, ' + $log.Kept + ' vom Rechner behalten, ' +
+                $log.Skipped + ' kennt dieses Spiel nicht.') -ForegroundColor Green
+    Write-Host ('       ' + $file) -ForegroundColor DarkGray
+    Write-Host '  Rueckgaengig: Menuepunkt 6, Preset "vor_kers_preset".' -ForegroundColor DarkGray
+}
+
+# ---------------------------------------------------------------------
+#  8) Hauptablauf
 # ---------------------------------------------------------------------
 function Invoke-Main {
     Show-Banner
@@ -1353,17 +1660,19 @@ function Invoke-Main {
     Write-Host '   3) nur testen (nichts schreiben)' -ForegroundColor White
     Write-Host '' 
     Write-Host '   Einstellungen (Dokumente\My Games)' -ForegroundColor DarkGray
-    Write-Host '   4) Grafik-/Spiel-Einstellungen sichern' -ForegroundColor White
-    Write-Host '   5) gesichertes Preset wiederherstellen' -ForegroundColor White
-    Write-Host '   6) Diagnose: was legt das Spiel an?' -ForegroundColor White
+    Write-Host '   4) KERS-Grafik-Preset anwenden (FSR/DLSS je GPU, UDP an)' -ForegroundColor White
+    Write-Host '   5) eigene Einstellungen sichern' -ForegroundColor White
+    Write-Host '   6) gesichertes Preset wiederherstellen' -ForegroundColor White
+    Write-Host '   7) Diagnose: was legt das Spiel an?' -ForegroundColor White
     Write-Host ''
-    Write-Host '   7) Beenden' -ForegroundColor White
-    $mode = Read-Choice '  Auswahl' 1 7 1
-    if ($mode -eq 7) { return 0 }
+    Write-Host '   8) Beenden' -ForegroundColor White
+    $mode = Read-Choice '  Auswahl' 1 8 1
+    if ($mode -eq 8) { return 0 }
 
-    if ($mode -eq 4) { Invoke-SavePreset;    return 0 }
-    if ($mode -eq 5) { Invoke-RestorePreset; return 0 }
-    if ($mode -eq 6) { Invoke-Report;        return 0 }
+    if ($mode -eq 4) { Invoke-ApplyPreset;   return 0 }
+    if ($mode -eq 5) { Invoke-SavePreset;    return 0 }
+    if ($mode -eq 6) { Invoke-RestorePreset; return 0 }
+    if ($mode -eq 7) { Invoke-Report;        return 0 }
 
     if ($mode -eq 2) {
         $games = @(Select-Games)
