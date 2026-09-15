@@ -19,8 +19,11 @@ Eine einzige Datei - Doppelklick genuegt. Der Installer
   Angeboten wird alles, was das jeweilige Spiel selbst kennt
   (z.B. Fanatec CSL Elite / Podium, Logitech G29 / G923, Thrustmaster
   T300 / TS-XW ...) - plus die mitgelieferte native KERS-Map.
+* **laesst dich den Namen festlegen, unter dem die Base im Spiel steht.**
+  Vorschlag ist `KERS_<MODELL>_F1_MOD`, also z.B. **`KERS_R5_F1_MOD`** -
+  eigener Name oder der Originalname des emulierten Lenkrads gehen auch.
 * **installiert die Actionmap in jedes gewaehlte Spiel** als
-  `actionmaps\moza_<modell>.xml`, inklusive Backup und Log.
+  `actionmaps\KERS_R5_F1_MOD.xml`, inklusive Backup und Log.
 
 ### Bedienung
 
@@ -33,7 +36,7 @@ Eine einzige Datei - Doppelklick genuegt. Der Installer
    * `2` Mod deinstallieren (Originalzustand wiederherstellen)
    * `3` nur testen - zeigt an, was passieren wuerde, schreibt aber nichts
 3. Wheelbase bestaetigen, Spiele auswaehlen (Enter = alle), Lenkrad
-   auswaehlen - fertig.
+   auswaehlen, Namen bestaetigen (`KERS_R5_F1_MOD`) - fertig.
 4. Im Spiel unter *Einstellungen -> Steuerung* das Geraet auswaehlen und
    die Belegung pruefen.
 
@@ -45,18 +48,25 @@ DirectInput-GUID hinterlegt sind. Die GUID hat das Format
 fuer eine MOZA R3 (PID `0005`, VID `346E`).
 
 Der Installer kopiert das Profil des gewaehlten Lenkrads, setzt die GUID
-auf die der MOZA und vergibt einen eigenen Profilnamen
-(`moza_r3`, `moza_r5`, ...). Der Anzeige-Key des Originals bleibt erhalten,
-damit Name, Symbole und Tastenbelegung im Spiel stimmen. Die Originaldatei
-des Spiels wird dabei nicht angefasst - es kommt nur eine neue Datei dazu.
+auf die der MOZA und vergibt einen eigenen Profilnamen - standardmaessig
+`KERS_R5_F1_MOD` (Modell entsprechend). Dieser Name steht sowohl im
+`name`/`actionMapName` als auch im `display`/`deviceDisplayKey`, taucht
+also genau so in der Geraeteliste des Spiels auf. Belegung und Symbole
+kommen weiter vom emulierten Lenkrad. Die Originaldateien des Spiels
+werden nicht angefasst - es kommt nur eine neue Datei dazu.
 
-* installiert wird: `<Spiel>\actionmaps\moza_<modell>.xml`
-* Backup einer bereits vorhandenen MOZA-Datei: `...xml.kersbak_<zeitstempel>`
+Wer lieber den Originalnamen sehen will (z.B. "Logitech G29"), waehlt beim
+Namens-Schritt Punkt `3` - dann bleibt der Anzeige-Key des Originals stehen.
+
+* installiert wird: `<Spiel>\actionmaps\KERS_R5_F1_MOD.xml`
+* Backup vorhandener MOZA-Dateien (auch aelterer `moza_*.xml`):
+  `...xml.kersbak_<zeitstempel>`
 * Log: `%LOCALAPPDATA%\KERS_Mods\moza_f1_installer.log`
 * Uebersicht der Installationen: `%LOCALAPPDATA%\KERS_Mods\moza_f1_install.json`
 
-Deinstallation (Menuepunkt `2`) entfernt die `moza_*.xml` und die Backups
-wieder - das Spiel ist damit exakt im Auslieferungszustand.
+Deinstallation (Menuepunkt `2`) erkennt MOZA-Actionmaps an ihrer GUID -
+unabhaengig vom Dateinamen - und entfernt sie samt Backups wieder. Das
+Spiel ist damit exakt im Auslieferungszustand.
 
 ### Aeltere Einzel-Skripte
 

@@ -586,9 +586,59 @@ function Select-EmulationProfile {
     return $entries[$sel - 1]
 }
 
+function Select-ProfileName {
+    param($Base, $Source)
+    Write-Head 'Schritt 4 - Name im Spiel'
+    $default = ('KERS_' + $Base.Slug.ToUpper() + '_F1_MOD')
+    if ($null -eq $Source) { $origin = 'MOZA Standard' } else { $origin = $Source.Label }
+    Write-Host '  Unter diesem Namen taucht die Base im Spiel in der Geraeteliste auf.' -ForegroundColor Gray
+    Write-Host ''
+    Write-Host ('   1) ' + $default + '   (empfohlen)') -ForegroundColor White
+    Write-Host '   2) eigener Name' -ForegroundColor White
+    Write-Host ('   3) Originalname behalten (' + $origin + ')') -ForegroundColor White
+    $sel = Read-Choice '  Auswahl' 1 3 1
+    if ($sel -eq 3) { return @{ Profile = $default; Display = '' } }
+    if ($sel -eq 1) { return @{ Profile = $default; Display = $default } }
+    while ($true) {
+        Write-Host ''
+        Write-Host ('  Name (z.B. ' + $default + ') : ') -NoNewline -ForegroundColor Yellow
+        $raw = (Read-Line).Trim()
+        $disp = ($raw -replace '[<>&"'']', '').Trim()
+        if ($disp -ne '') { return @{ Profile = (ConvertTo-SafeName $disp); Display = $disp } }
+        Write-Host '  Bitte einen Namen eingeben.' -ForegroundColor Red
+    }
+}
+
 # ---------------------------------------------------------------------
 #  4) Installation
 # ---------------------------------------------------------------------
+function ConvertTo-SafeName {
+    param([string]$Text)
+    $x = ($Text -replace '[^A-Za-z0-9_\-]', '_')
+    while ($x -match '__') { $x = $x -replace '__', '_' }
+    $x = $x.Trim('_')
+    if ($x -eq '') { $x = 'KERS_MOZA_F1_MOD' }
+    return $x
+}
+
+function Get-MozaFiles {
+    # alle Actionmap-Dateien eines Spiels, die auf eine MOZA-GUID zeigen -
+    # unabhaengig vom Dateinamen (aeltere Installationen hiessen moza_*.xml)
+    param([string]$ActionMaps)
+    $out = @()
+    foreach ($f in (Get-ChildItem -LiteralPath $ActionMaps -Filter '*.xml' -File -ErrorAction SilentlyContinue)) {
+        if ($f.Extension -ine '.xml') { continue }
+        try {
+            $txt = (Read-XmlText $f.FullName).Text
+            $dm = [regex]::Match($txt, '<Device\b[^>]*>', 'IgnoreCase')
+            if (-not $dm.Success) { continue }
+            $tid = Get-XmlAttr $dm.Value 'typeid'
+            if ($tid -and ($tid -match ('^\{[0-9A-Fa-f]{4}' + $script:MozaVid + '-'))) { $out += $f }
+        } catch { }
+    }
+    return $out
+}
+
 function Get-NativeTemplate {
     $b64 = ($script:NativeXmlB64 -replace '\s', '')
     $bytes = [Convert]::FromBase64String($b64)
@@ -596,13 +646,24 @@ function Get-NativeTemplate {
 }
 
 function New-MozaXml {
-    param($Base, $Source)
-    # $Source = $null  -> native KERS-Map,  sonst geklontes Spiel-Profil
-    $target = ('moza_' + $Base.Slug)
+    param($Base, $Source, [string]$ProfileName, [string]$DisplayName)
+    # $Source      = $null -> native KERS-Map, sonst geklontes Spiel-Profil
+    # $ProfileName = interner Profilname + Dateiname
+    # $DisplayName = Name, der im Spiel angezeigt wird; leer -> Originalname
+    if ([string]::IsNullOrWhiteSpace($ProfileName)) { $ProfileName = ('moza_' + $Base.Slug) }
+    $target = ConvertTo-SafeName $ProfileName
+    $shown = $DisplayName
     if ($null -eq $Source) {
         $text = Get-NativeTemplate
         $mode = 'raw'
-        $text = $text.Replace('"lng_moza_r3"', ('"lng_' + $target + '"'))
+        if ([string]::IsNullOrWhiteSpace($DisplayName)) {
+            $disp = ('lng_moza_' + $Base.Slug)
+            $shown = $disp
+        } else {
+            $disp = $DisplayName
+        }
+        # Anzeige-Key und Profilname der Vorlage ersetzen
+        $text = $text.Replace('"lng_moza_r3"', ('"' + $disp + '"'))
         $text = $text.Replace('"moza_r3"', ('"' + $target + '"'))
         $text = [regex]::Replace($text, '\{0005346E-0000-0000-0000-504944564944\}', $Base.Guid, 'IgnoreCase')
         $emulates = 'MOZA nativ (KERS-Map)'
@@ -612,15 +673,24 @@ function New-MozaXml {
         $mode = $doc.Mode
         # Geraete-ID auf die MOZA umbiegen (Device + alle ActionMaps)
         $text = [regex]::Replace($text, [regex]::Escape($Source.TypeId), $Base.Guid, 'IgnoreCase')
-        # interner Profilname eindeutig machen, Anzeigename des Originals behalten
+        # interner Profilname eindeutig machen
         $text = $text.Replace(('"' + $Source.Name + '"'), ('"' + $target + '"'))
+        if ([string]::IsNullOrWhiteSpace($DisplayName)) {
+            # Anzeigename des Originals behalten
+            if ($Source.Display) { $shown = (Get-PrettyLabel $Source.Display) } else { $shown = $Source.Label }
+        } elseif ($Source.Display) {
+            # display= am Device und deviceDisplayKey= in den ActionMaps
+            $text = $text.Replace(('"' + $Source.Display + '"'), ('"' + $DisplayName + '"'))
+        } else {
+            $text = [regex]::Replace($text, '(<Device\b)', ('${1} display="' + $DisplayName + '"'), 'IgnoreCase')
+        }
         $emulates = $Source.Label
     }
-    return @{ Text = $text; Mode = $mode; FileName = ($target + '.xml'); Emulates = $emulates }
+    return @{ Text = $text; Mode = $mode; FileName = ($target + '.xml'); Emulates = $emulates; Shown = $shown }
 }
 
 function Install-ToGame {
-    param($Game, $Base, $Source, [switch]$DryRun)
+    param($Game, $Base, $Source, [string]$ProfileName, [string]$DisplayName, [switch]$DryRun)
 
     $src = $Source
     if ($null -ne $src) {
@@ -642,28 +712,42 @@ function Install-ToGame {
         }
     }
 
-    $build = New-MozaXml -Base $Base -Source $src
+    $build = New-MozaXml -Base $Base -Source $src -ProfileName $ProfileName -DisplayName $DisplayName
     $dest = Join-Path $Game.ActionMaps $build.FileName
 
+    # Dateien frueherer Installationen: zwei Actionmaps mit derselben
+    # Geraete-GUID bringen das Spiel durcheinander
+    $stale = @(Get-MozaFiles $Game.ActionMaps | Where-Object { $_.FullName -ine $dest })
+
     if ($DryRun) {
-        Write-Host ('      [TEST] wuerde schreiben: ' + $dest + '  (als ' + $build.Emulates + ')') -ForegroundColor DarkGray
-        return [pscustomobject]@{ Game = $Game.Title; Status = 'Test'; File = $dest; Emulates = $build.Emulates }
+        foreach ($s in $stale) {
+            Write-Host ('      [TEST] wuerde alte MOZA-Datei sichern: ' + $s.Name) -ForegroundColor DarkGray
+        }
+        Write-Host ('      [TEST] wuerde schreiben: ' + $dest) -ForegroundColor DarkGray
+        Write-Host ('             im Spiel als "' + $build.Shown + '" (emuliert: ' + $build.Emulates + ')') -ForegroundColor DarkGray
+        return [pscustomobject]@{ Game = $Game.Title; Status = 'Test'; File = $dest; Emulates = $build.Emulates; Shown = $build.Shown }
     }
 
     try {
+        foreach ($s in $stale) {
+            Move-Item -LiteralPath $s.FullName -Destination ($s.FullName + '.kersbak_' + $script:Stamp) -Force
+            Write-Host ('      alte MOZA-Datei gesichert: ' + $s.Name) -ForegroundColor DarkGray
+            Write-Log ('beiseite gelegt: ' + $s.FullName)
+        }
         if (Test-Path -LiteralPath $dest) {
             $bak = ($dest + '.kersbak_' + $script:Stamp)
             Copy-Item -LiteralPath $dest -Destination $bak -Force
             Write-Host ('      Backup: ' + (Split-Path $bak -Leaf)) -ForegroundColor DarkGray
         }
         Write-XmlText -Path $dest -Text $build.Text -Mode $build.Mode
-        Write-Log ('installiert: ' + $dest + ' (' + $build.Emulates + ')')
-        Write-Host ('      [OK] ' + $build.FileName + '  ->  emuliert: ' + $build.Emulates) -ForegroundColor Green
-        return [pscustomobject]@{ Game = $Game.Title; Status = 'OK'; File = $dest; Emulates = $build.Emulates }
+        Write-Log ('installiert: ' + $dest + ' (Name: ' + $build.Shown + ', emuliert: ' + $build.Emulates + ')')
+        Write-Host ('      [OK] ' + $build.FileName) -ForegroundColor Green
+        Write-Host ('           im Spiel als "' + $build.Shown + '"  (emuliert: ' + $build.Emulates + ')') -ForegroundColor Green
+        return [pscustomobject]@{ Game = $Game.Title; Status = 'OK'; File = $dest; Emulates = $build.Emulates; Shown = $build.Shown }
     } catch {
         Write-Log ('FEHLER ' + $dest + ': ' + $_.Exception.Message)
         Write-Host ('      [FEHLER] ' + $_.Exception.Message) -ForegroundColor Red
-        return [pscustomobject]@{ Game = $Game.Title; Status = 'Fehler'; File = $dest; Emulates = $build.Emulates }
+        return [pscustomobject]@{ Game = $Game.Title; Status = 'Fehler'; File = $dest; Emulates = $build.Emulates; Shown = $build.Shown }
     }
 }
 
@@ -707,14 +791,13 @@ function Invoke-Uninstall {
     Write-Head 'Deinstallation'
     $count = 0
     foreach ($g in $Games) {
-        $files = @(Get-ChildItem -LiteralPath $g.ActionMaps -Filter 'moza_*.xml' -File -ErrorAction SilentlyContinue |
-                   Where-Object { $_.Extension -ieq '.xml' })
-        $baks  = @(Get-ChildItem -LiteralPath $g.ActionMaps -Filter 'moza_*.kersbak_*' -File -ErrorAction SilentlyContinue)
+        $files = @(Get-MozaFiles $g.ActionMaps)
+        $baks  = @(Get-ChildItem -LiteralPath $g.ActionMaps -Filter '*.kersbak_*' -File -ErrorAction SilentlyContinue)
         if ($files.Count -eq 0 -and $baks.Count -eq 0) { continue }
         Write-Host ('  ' + $g.Title + '  (' + $g.Path + ')') -ForegroundColor White
         foreach ($f in $files) {
-            # die moza_*.xml gehoert nicht zum Spiel - entfernen stellt den
-            # Originalzustand wieder her
+            # die MOZA-Actionmap gehoert nicht zum Spiel - entfernen stellt
+            # den Originalzustand wieder her
             try {
                 Remove-Item -LiteralPath $f.FullName -Force
                 Write-Host ('      [OK] entfernt: ' + $f.Name) -ForegroundColor Green
@@ -1120,6 +1203,7 @@ function Invoke-Main {
     }
 
     $emuProfile = Select-EmulationProfile -Games $games
+    $naming = Select-ProfileName -Base $base -Source $emuProfile
 
     Write-Head 'Installation'
     $results = @()
@@ -1127,9 +1211,9 @@ function Invoke-Main {
         Write-Host ''
         Write-Host ('  ' + $g.Title + '   ' + $g.Path) -ForegroundColor White
         if ($mode -eq 3) {
-            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile -DryRun)
+            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile -ProfileName $naming.Profile -DisplayName $naming.Display -DryRun)
         } else {
-            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile)
+            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile -ProfileName $naming.Profile -DisplayName $naming.Display)
         }
     }
 
@@ -1140,7 +1224,7 @@ function Invoke-Main {
         $col = 'Green'
         if ($r.Status -eq 'Fehler') { $col = 'Red' }
         if ($r.Status -eq 'Test')   { $col = 'DarkGray' }
-        Write-Host ('   {0,-9} {1,-8} emuliert: {2}' -f $r.Game, $r.Status, $r.Emulates) -ForegroundColor $col
+        Write-Host ('   {0,-9} {1,-7} Name: {2,-20} emuliert: {3}' -f $r.Game, $r.Status, $r.Shown, $r.Emulates) -ForegroundColor $col
     }
 
     $bad = @($results | Where-Object { $_.Status -eq 'Fehler' })
@@ -1151,8 +1235,15 @@ function Invoke-Main {
     } elseif ($mode -eq 3) {
         Write-Host '  Testlauf beendet - es wurde nichts veraendert.' -ForegroundColor Gray
     } else {
-        Write-Host '  Fertig. Im Spiel unter Einstellungen -> Steuerung das neue' -ForegroundColor Green
-        Write-Host '  Geraet auswaehlen und die Belegung pruefen.' -ForegroundColor Green
+        if ([string]::IsNullOrWhiteSpace($naming.Display)) {
+            Write-Host '  Fertig. Im Spiel unter Einstellungen -> Steuerung erscheint die' -ForegroundColor Green
+            Write-Host '  Base unter dem Namen des emulierten Lenkrads.' -ForegroundColor Green
+        } else {
+            Write-Host '  Fertig. Im Spiel unter Einstellungen -> Steuerung erscheint die' -ForegroundColor Green
+            Write-Host ('  Base als "' + $naming.Display + '" - dort auswaehlen und Belegung pruefen.') -ForegroundColor Green
+            Write-Host '  Zeigt das Spiel den Namen nicht sauber an: Installer nochmal' -ForegroundColor DarkGray
+            Write-Host '  starten und bei "Name im Spiel" Punkt 3 waehlen.' -ForegroundColor DarkGray
+        }
     }
     Write-Host ('  Log: ' + $script:LogFile) -ForegroundColor DarkGray
     return 0
