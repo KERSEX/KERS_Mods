@@ -1,6 +1,6 @@
 @echo off
 REM =====================================================================
-REM  KERS F1 Mods Installer - Werkzeugkasten fuer F1 2015 - F1 23
+REM  KERS F1 Mods Installer - Werkzeugkasten fuer F1 2015 - F1 26
 REM  https://github.com/kersex/KERS_Mods
 REM
 REM  Einfach doppelklicken. Das Tool
@@ -30,7 +30,7 @@ endlocal & exit /b %RC%
 
 #@PSBEGIN@
 # =====================================================================
-#  KERS F1 Mods Installer - Werkzeugkasten fuer F1 2015 - F1 23
+#  KERS F1 Mods Installer - Werkzeugkasten fuer F1 2015 - F1 26
 #  https://github.com/kersex/KERS_Mods
 #
 #  - MOZA Wheel-Fix: Base erkennen (VID 346E), Actionmap in jedes
@@ -75,7 +75,7 @@ $script:MozaModels = [ordered]@{
 # ---------------------------------------------------------------------
 #  F1-Spiele, die die actionmaps-Struktur benutzen
 # ---------------------------------------------------------------------
-$script:F1FolderPattern = '^F1[ _\-]?(2015|2016|2017|2018|2019|2020|2021|22|23)$'
+$script:F1FolderPattern = '^F1[ _\-]?(2015|2016|2017|2018|2019|2020|2021|22|23|24|25|26)$'
 
 function Write-Log {
     param([string]$Text)
@@ -98,7 +98,7 @@ function Show-Banner {
     Write-Host ''
     Write-Host '  ==============================================================' -ForegroundColor Cyan
     Write-Host '   KERS F1 Mods Installer' -ForegroundColor White
-    Write-Host '   F1 2015 - F1 23   |   Wheel-Fix, Presets, Diagnose' -ForegroundColor Gray
+    Write-Host '   F1 2015 - F1 26   |   Wheel-Fix, Presets, Diagnose' -ForegroundColor Gray
     Write-Host ('   v' + $script:KersVersion + '   github.com/kersex/KERS_Mods') -ForegroundColor DarkGray
     Write-Host '  ==============================================================' -ForegroundColor Cyan
 }
@@ -393,7 +393,7 @@ function Get-RegistryGameDirs {
                 try {
                     $p = Get-ItemProperty -Path $k.PSPath -ErrorAction SilentlyContinue
                     $dn = [string]$p.DisplayName
-                    if ($dn -and ($dn -match '^F1[ _\-]?(2015|2016|2017|2018|2019|2020|2021|22|23)\b')) {
+                    if ($dn -and ($dn -match '^F1[ _\-]?(2015|2016|2017|2018|2019|2020|2021|22|23|24|25|26)\b')) {
                         if ($p.InstallLocation) { $dirs += [string]$p.InstallLocation }
                     }
                 } catch { }
@@ -455,7 +455,7 @@ function Add-GameCandidate {
         $title = Get-F1Title $leaf
         if (-not $title) {
             # z.B. Epic-Ordner "F12021" oder abweichende Namen
-            $m = [regex]::Match($leaf, 'F1[ _\-]?(2015|2016|2017|2018|2019|2020|2021|22|23)', 'IgnoreCase')
+            $m = [regex]::Match($leaf, 'F1[ _\-]?(2015|2016|2017|2018|2019|2020|2021|22|23|24|25|26)', 'IgnoreCase')
             if ($m.Success) { $title = ('F1 ' + $m.Groups[1].Value) } else { $title = $leaf }
         }
         $key = $full.ToLower()

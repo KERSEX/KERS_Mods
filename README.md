@@ -2,7 +2,7 @@
 
 Mods for some Games
 
-## KERS F1 Mods Installer (F1 2015 - F1 23)
+## KERS F1 Mods Installer (F1 2015 - F1 26)
 
 `KERS_F1_Mods_Installer.cmd` - eine Datei, Doppelklick. Enthaelt den
 MOZA Wheel-Fix und die Einstellungs-Werkzeuge.
@@ -24,7 +24,7 @@ MOZA Wheel-Fix und die Einstellungs-Werkzeuge.
 * **erkennt die angeschlossene MOZA Wheelbase automatisch** (USB VID `346E`)
   und liest die Product-ID direkt am Geraet aus. Wird nichts gefunden,
   fragt er nach (R3, R5, R9, R12, R16/R21, R8 oder PID manuell).
-* **findet alle installierten F1-Spiele** (F1 2015 bis F1 23) ueber
+* **findet alle installierten F1-Spiele** (F1 2015 bis F1 26) ueber
   Steam-Bibliotheken, Epic-Manifeste, die EA/Origin-Ordner, einen
   Laufwerks-Scan und die Registry. Pfade lassen sich zusaetzlich manuell
   ergaenzen.
@@ -62,7 +62,7 @@ Spiel ist damit exakt im Auslieferungszustand.
 ### Einstellungen sichern und wiederherstellen
 
 Menuepunkt `4` sichert, was ein Spiel unter
-`Dokumente\My Games\F1 20xx` ablegt - Grafik- und Spieleinstellungen,
+`Dokumente\My Games\F1 <Jahr>` ablegt - Grafik- und Spieleinstellungen,
 Force-Feedback, und Tastenbelegungen, soweit sie dort als Datei liegen.
 Gesichert werden die Ordner `hardwaresettings`, `actionmaps`,
 `graphicsconfig` und `settings`; **Savegames bleiben unberuehrt**.
