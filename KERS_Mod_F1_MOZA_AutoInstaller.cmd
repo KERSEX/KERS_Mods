@@ -539,6 +539,8 @@ function Get-DeviceProfiles {
             if ($typeid -match ('^\{[0-9A-Fa-f]{4}' + $script:MozaVid)) { continue }
             $name = Get-XmlAttr $tag 'name'
             if (-not $name) { continue }
+            # Gamepads und Tastatur sind keine sinnvollen Emulationsziele
+            if ($name -match '(?i)(xbox|x360|xinput|gamepad|dualshock|dualsense|keyboard|mouse|steam_controller)') { continue }
             $display = Get-XmlAttr $tag 'display'
             if ($display) { $label = Get-PrettyLabel $display } else { $label = Get-PrettyLabel $name }
             $profiles += [pscustomobject]@{
@@ -1167,10 +1169,13 @@ function Invoke-Main {
     }
 
     $base = Select-MozaBase
+    # fester Name in der Geraeteliste des Spiels - umbenennen geht im Spiel
+    $modName = ConvertTo-SafeName ('KERS_' + $base.Slug.ToUpper() + '_F1_MOD')
     Write-Host ''
-    Write-Host ('  Wheelbase : ' + $base.Label) -ForegroundColor White
-    Write-Host ('  GUID      : ' + $base.Guid) -ForegroundColor DarkGray
-    Write-Host ('  Dateiname : moza_' + $base.Slug + '.xml') -ForegroundColor DarkGray
+    Write-Host ('  Wheelbase    : ' + $base.Label) -ForegroundColor White
+    Write-Host ('  GUID         : ' + $base.Guid) -ForegroundColor DarkGray
+    Write-Host ('  Name im Spiel: ' + $modName) -ForegroundColor DarkGray
+    Write-Host ('  Datei        : ' + $modName + '.xml') -ForegroundColor DarkGray
 
     $games = @(Select-Games)
     if ($games.Count -eq 0) {
@@ -1180,9 +1185,6 @@ function Invoke-Main {
     }
 
     $emuProfile = Select-EmulationProfile -Games $games
-
-    # fester Name in der Geraeteliste des Spiels - umbenennen geht im Spiel
-    $modName = ConvertTo-SafeName ('KERS_' + $base.Slug.ToUpper() + '_F1_MOD')
 
     Write-Head 'Installation'
     $results = @()
