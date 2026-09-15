@@ -84,12 +84,14 @@ ausgelesen):
 
 * **RTX** &rarr; DLSS bleibt an, so wie im Preset
 * **keine RTX** (Radeon, Arc, GTX ...) &rarr; DLSS aus, **FSR an, Stufe
-  "ausgewogen"**. Auf Nicht-NVIDIA-Karten werden ausserdem Reflex,
-  Frame Generation und SER abgeschaltet - die laufen dort ohnehin nicht.
+  "ausgewogen"**. Auf Nicht-NVIDIA-Karten werden ausserdem Reflex und SER
+  abgeschaltet - die laufen dort ohnehin nicht.
 * Kennt ein aelteres Spiel gar kein FSR, bleibt die Kantenglaettung in Ruhe
   und TAA bleibt an, statt ohne alles dazustehen.
 
-**Immer gesetzt:** UDP-Telemetrie `enabled="true"` und `onlineNames="on"`.
+**Immer gesetzt:** Frame Generation aus (`frame_gen mode="0"`,
+`multi_frame_gen value="0"`), UDP-Telemetrie `enabled="true"` und
+`onlineNames="on"`.
 
 Uebertragen werden nur Werte, die es im Zielspiel wirklich gibt - alles was
 das jeweilige Spieljahr nicht kennt, wird uebersprungen statt neu angelegt.

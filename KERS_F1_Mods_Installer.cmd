@@ -1500,8 +1500,6 @@ function Set-UpscalingForGpu {
     if ($Gpu -notmatch 'NVIDIA|GeForce|GTX') {
         # laeuft nur auf NVIDIA - auf AMD/Intel sonst nutzlos eingeschaltet
         Set-AttrIfPresent -Node ($root.SelectSingleNode('reflex')) -Name 'mode' -Value '0' -Log $Log -Path '/hardware_settings_config/reflex'
-        Set-AttrIfPresent -Node ($root.SelectSingleNode('frame_gen')) -Name 'mode' -Value '0' -Log $Log -Path '/hardware_settings_config/frame_gen'
-        Set-AttrIfPresent -Node ($root.SelectSingleNode('multi_frame_gen')) -Name 'value' -Value '0' -Log $Log -Path '/hardware_settings_config/multi_frame_gen'
         Set-AttrIfPresent -Node ($root.SelectSingleNode('ser')) -Name 'enabled' -Value 'false' -Log $Log -Path '/hardware_settings_config/ser'
         Set-AttrIfPresent -Node ($root.SelectSingleNode('rt_ray_reconstruction')) -Name 'enabled' -Value 'false' -Log $Log -Path '/hardware_settings_config/rt_ray_reconstruction'
     }
@@ -1526,6 +1524,16 @@ function Set-AaFallback {
     if (-not $on) {
         Set-AttrIfPresent -Node $aa -Name 'taa' -Value 'true' -Log $Log -Path '/hardware_settings_config/antialiasing'
     }
+}
+
+function Set-FrameGenOff {
+    # Frame Generation bleibt aus - unabhaengig von Preset und Grafikkarte
+    param($Doc, $Log)
+    $root = $Doc.DocumentElement
+    Set-AttrIfPresent -Node ($root.SelectSingleNode('frame_gen')) -Name 'mode' -Value '0' `
+                      -Log $Log -Path '/hardware_settings_config/frame_gen'
+    Set-AttrIfPresent -Node ($root.SelectSingleNode('multi_frame_gen')) -Name 'value' -Value '0' `
+                      -Log $Log -Path '/hardware_settings_config/multi_frame_gen'
 }
 
 function Set-UdpOn {
@@ -1580,7 +1588,7 @@ function Invoke-ApplyPreset {
     } else {
         Write-Host '  Upscaling   : keine RTX -> FSR an, Stufe "ausgewogen"' -ForegroundColor DarkGray
     }
-    Write-Host '  Ausserdem   : UDP-Telemetrie an, Online-Namen an' -ForegroundColor DarkGray
+    Write-Host '  Ausserdem   : Frame Generation aus, UDP-Telemetrie an, Online-Namen an' -ForegroundColor DarkGray
 
     $g = Select-UserGame 'Preset anwenden'
     if (-not $g) { return }
@@ -1612,6 +1620,7 @@ function Invoke-ApplyPreset {
                     -Path '/hardware_settings_config' -Log $log
     [void](Set-UpscalingForGpu -Doc $target -Gpu $gpu -Log $log)
     Set-AaFallback -Doc $target -Log $log
+    Set-FrameGenOff -Doc $target -Log $log
     Set-UdpOn -Doc $target -Log $log
 
     try {
