@@ -557,7 +557,7 @@ function Select-EmulationProfile {
     param($Games)
     Write-Head 'Schritt 3 - Als welches Lenkrad soll die MOZA laufen?'
     Write-Host '  Die MOZA wird dem Spiel als bereits unterstuetztes Lenkrad' -ForegroundColor Gray
-    Write-Host '  untergeschoben - damit stimmen Tastenbelegung, Symbole und Namen.' -ForegroundColor Gray
+    Write-Host '  untergeschoben - damit stimmen Tastenbelegung und Symbole.' -ForegroundColor Gray
 
     $index = @{}
     foreach ($g in $Games) {
@@ -584,29 +584,6 @@ function Select-EmulationProfile {
     $sel = Read-Choice '  Auswahl' 0 $entries.Count 0
     if ($sel -eq 0) { return $null }
     return $entries[$sel - 1]
-}
-
-function Select-ProfileName {
-    param($Base, $Source)
-    Write-Head 'Schritt 4 - Name im Spiel'
-    $default = ('KERS_' + $Base.Slug.ToUpper() + '_F1_MOD')
-    if ($null -eq $Source) { $origin = 'MOZA Standard' } else { $origin = $Source.Label }
-    Write-Host '  Unter diesem Namen taucht die Base im Spiel in der Geraeteliste auf.' -ForegroundColor Gray
-    Write-Host ''
-    Write-Host ('   1) ' + $default + '   (empfohlen)') -ForegroundColor White
-    Write-Host '   2) eigener Name' -ForegroundColor White
-    Write-Host ('   3) Originalname behalten (' + $origin + ')') -ForegroundColor White
-    $sel = Read-Choice '  Auswahl' 1 3 1
-    if ($sel -eq 3) { return @{ Profile = $default; Display = '' } }
-    if ($sel -eq 1) { return @{ Profile = $default; Display = $default } }
-    while ($true) {
-        Write-Host ''
-        Write-Host ('  Name (z.B. ' + $default + ') : ') -NoNewline -ForegroundColor Yellow
-        $raw = (Read-Line).Trim()
-        $disp = ($raw -replace '[<>&"'']', '').Trim()
-        if ($disp -ne '') { return @{ Profile = (ConvertTo-SafeName $disp); Display = $disp } }
-        Write-Host '  Bitte einen Namen eingeben.' -ForegroundColor Red
-    }
 }
 
 # ---------------------------------------------------------------------
@@ -1203,7 +1180,9 @@ function Invoke-Main {
     }
 
     $emuProfile = Select-EmulationProfile -Games $games
-    $naming = Select-ProfileName -Base $base -Source $emuProfile
+
+    # fester Name in der Geraeteliste des Spiels - umbenennen geht im Spiel
+    $modName = ConvertTo-SafeName ('KERS_' + $base.Slug.ToUpper() + '_F1_MOD')
 
     Write-Head 'Installation'
     $results = @()
@@ -1211,9 +1190,9 @@ function Invoke-Main {
         Write-Host ''
         Write-Host ('  ' + $g.Title + '   ' + $g.Path) -ForegroundColor White
         if ($mode -eq 3) {
-            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile -ProfileName $naming.Profile -DisplayName $naming.Display -DryRun)
+            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile -ProfileName $modName -DisplayName $modName -DryRun)
         } else {
-            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile -ProfileName $naming.Profile -DisplayName $naming.Display)
+            $results += (Install-ToGame -Game $g -Base $base -Source $emuProfile -ProfileName $modName -DisplayName $modName)
         }
     }
 
@@ -1235,15 +1214,8 @@ function Invoke-Main {
     } elseif ($mode -eq 3) {
         Write-Host '  Testlauf beendet - es wurde nichts veraendert.' -ForegroundColor Gray
     } else {
-        if ([string]::IsNullOrWhiteSpace($naming.Display)) {
-            Write-Host '  Fertig. Im Spiel unter Einstellungen -> Steuerung erscheint die' -ForegroundColor Green
-            Write-Host '  Base unter dem Namen des emulierten Lenkrads.' -ForegroundColor Green
-        } else {
-            Write-Host '  Fertig. Im Spiel unter Einstellungen -> Steuerung erscheint die' -ForegroundColor Green
-            Write-Host ('  Base als "' + $naming.Display + '" - dort auswaehlen und Belegung pruefen.') -ForegroundColor Green
-            Write-Host '  Zeigt das Spiel den Namen nicht sauber an: Installer nochmal' -ForegroundColor DarkGray
-            Write-Host '  starten und bei "Name im Spiel" Punkt 3 waehlen.' -ForegroundColor DarkGray
-        }
+        Write-Host '  Fertig. Im Spiel unter Einstellungen -> Steuerung erscheint die' -ForegroundColor Green
+        Write-Host ('  Base als "' + $modName + '" - dort auswaehlen und Belegung pruefen.') -ForegroundColor Green
     }
     Write-Host ('  Log: ' + $script:LogFile) -ForegroundColor DarkGray
     return 0
