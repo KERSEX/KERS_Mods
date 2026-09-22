@@ -322,7 +322,10 @@ function Invoke-Main {
             '0' { return 0 }
             '1' { Start-ModManager $root }
             '2' { Start-F1Installer $root }
-            '3' { [void](Install-KersTools) }
+            '3' {
+                # vorhanden -> Update pruefen, sonst erste Installation
+                if ($root) { Invoke-UpdateCheck } else { [void](Install-KersTools) }
+            }
             '4' {
                 try { Start-Process explorer.exe $root } catch { Write-Err $_.Exception.Message }
             }
