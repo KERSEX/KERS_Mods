@@ -9,14 +9,36 @@ installieren, keine Abhaengigkeiten.
 
 ## Schnellstart
 
+**Eine Datei genuegt:** [`KERS_Start.cmd`](KERS_Start.cmd) herunterladen
+und doppelklicken. Der Starter
+
+1. fragt, ob er als Administrator laufen soll (noetig fuer Aenderungen in
+   `Program Files`, z.B. F1-Wheel-Fix oder Mods im Spielordner),
+2. laedt den Werkzeugkasten nach Rueckfrage von GitHub nach
+   `%LOCALAPPDATA%\KERS_Mods\app` - falls er nicht ohnehin daneben liegt,
+3. startet auf Knopfdruck den Mod Manager oder den F1 Installer und holt
+   spaeter Updates.
+
+```
+   1) Mod Manager starten (alle Spiele)
+   2) F1 Mods Installer starten (MOZA Wheel-Fix, Grafik-Preset)
+   3) Auf Updates pruefen / neu laden
+   4) Ordner oeffnen
+   A) Als Administrator neu starten
+
+   0) Beenden
+```
+
+Wer lieber das ganze Repository nimmt (*Code -> Download ZIP*), startet
+direkt:
+
 | Ich will ... | Datei |
 |---|---|
-| MOZA-Lenkrad in F1 zum Laufen bringen, Grafik-Preset setzen | `F1/KERS_F1_Mods_Installer.cmd` |
-| alle unterstuetzten Spiele sehen, sichern, wiederherstellen | `Tools/KERS_Mod_Manager/KERS_Mod_Manager.cmd` |
+| MOZA-Lenkrad in F1, Grafik-Preset | `F1/KERS_F1_Mods_Installer.cmd` |
+| alle Spiele: Profile, Mods, Backups | `Tools/KERS_Mod_Manager/KERS_Mod_Manager.cmd` |
 
-Repository als ZIP herunterladen (*Code -> Download ZIP*), entpacken,
-Datei doppelklicken. Der F1-Installer funktioniert auch allein, wenn man
-nur ihn herunterlaedt.
+Alles laeuft mit Windows-Bordmitteln. Heruntergeladen wird nur das
+Projekt-Archiv von GitHub, und auch das erst nach Rueckfrage.
 
 ## Unterstuetzte Spiele
 

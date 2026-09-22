@@ -114,9 +114,36 @@ function Show-KersGameMenu {
     }
 }
 
+function Test-KersAdmin {
+    try {
+        $id = [Security.Principal.WindowsIdentity]::GetCurrent()
+        return (New-Object Security.Principal.WindowsPrincipal($id)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    } catch { return $false }
+}
+
+function Invoke-KersElevate {
+    # startet dasselbe Skript noch einmal mit Administrator-Rechten
+    $self = $PSCommandPath
+    if (-not $self) { $self = Join-Path $here 'manager.ps1' }
+    try {
+        [void](Start-Process -FilePath 'powershell.exe' -Verb RunAs -PassThru -ArgumentList @(
+            '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ('"' + $self + '"')
+        ))
+        return $true
+    } catch {
+        Write-KersError ('Neustart als Administrator fehlgeschlagen: ' + $_.Exception.Message)
+        return $false
+    }
+}
+
 function Show-KersMainMenu {
     while ($true) {
         Write-KersBanner 'KERS MOD MANAGER' ('v' + $script:KersVersion + '   |   github.com/KERSEX/KERS_Mods')
+        $isAdmin = Test-KersAdmin
+        if (-not $isAdmin) {
+            Write-KersDim 'Ohne Administrator-Rechte: Spielordner unter "Program Files"'
+            Write-KersDim '(z.B. Mods bei GTA V oder Cyberpunk) lassen sich nicht aendern.'
+        }
         Write-Host ''
         Write-Host '  Suche installierte Spiele ...' -ForegroundColor DarkGray
         $instances = @(Get-KersAllInstances)
@@ -125,7 +152,7 @@ function Show-KersMainMenu {
         $keys  = @()
         if ($instances.Count -eq 0) {
             Write-KersWarn 'Kein unterstuetztes Spiel gefunden.'
-            Write-KersDim 'Unterstuetzt werden aktuell F1 2015-26 und Assetto Corsa.'
+            Write-KersDim ('Unterstuetzt: ' + ((@($script:GameDefs | ForEach-Object { $_.name })) -join ', '))
         } else {
             $items += @{ Heading = 'Erkannte Spiele' }
             for ($i = 0; $i -lt $instances.Count; $i++) {
@@ -140,9 +167,13 @@ function Show-KersMainMenu {
         $items += @{ Key = 'A'; Text = 'Alle erkannten Spiele sichern' }
         $items += @{ Key = 'D'; Text = 'Diagnose (System, Spiele, Backups)' }
         $items += @{ Key = 'L'; Text = 'Logdatei anzeigen' }
+        if (-not $isAdmin) {
+            $items += @{ Key = 'E'; Text = 'Als Administrator neu starten'; Hint = 'noetig fuer Aenderungen in "Program Files"' }
+        }
         $items += @{ Separator = $true }
         $items += @{ Key = '0'; Text = 'Beenden' }
         $keys  += @('A', 'D', 'L', '0')
+        if (-not $isAdmin) { $keys += 'E' }
 
         Show-KersMenu $items
         $sel = Read-KersKey '  Auswahl' $keys '0'
@@ -176,6 +207,12 @@ function Show-KersMainMenu {
                 Write-KersBanner 'KERS DIAGNOSTICS' ''
                 Show-KersSystemInfo
                 Show-KersGameDiagnostics $instances
+                Write-Host ''
+                Write-Host '  Weiter mit Enter ...' -NoNewline -ForegroundColor DarkGray
+                [void](Read-KersLine)
+            }
+            'E' {
+                if (Invoke-KersElevate) { return $script:KersExitOk }
                 Write-Host ''
                 Write-Host '  Weiter mit Enter ...' -NoNewline -ForegroundColor DarkGray
                 [void](Read-KersLine)

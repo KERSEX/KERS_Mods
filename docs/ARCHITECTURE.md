@@ -2,6 +2,8 @@
 
 ```
 KERS_Mods/
+├── KERS_Start.cmd                   Einzel-Download: holt und startet alles
+│
 ├── F1/                              Alles rund um die F1-Spiele
 │   ├── KERS_F1_Mods_Installer.cmd   eigenstaendig, laeuft auch ohne den Rest
 │   ├── presets/                      mitgelieferte Grafik-Presets
@@ -38,6 +40,34 @@ KERS_Mods/
 │
 └── docs/
 ```
+
+## Der Starter
+
+`KERS_Start.cmd` ist die einzige Datei, die man braucht. Batch-Teil und
+PowerShell-Teil stecken in einer Datei, damit ein Doppelklick genuegt -
+eine `.ps1` wuerde Windows sonst im Editor oeffnen.
+
+```
+KERS_Start.cmd
+   ├── fragt nach Administrator-Rechten (Start-Process -Verb RunAs)
+   ├── sucht den Werkzeugkasten
+   │      1. neben sich selbst (geklontes/entpacktes Repository)
+   │      2. %LOCALAPPDATA%\KERS_Mods\app
+   ├── laedt ihn sonst nach Rueckfrage von GitHub
+   │      github.com/KERSEX/KERS_Mods/archive/refs/heads/main.zip
+   │      -> ZIP pruefen (Groesse + PK-Signatur) -> entpacken -> app\
+   │      -> .kers_version.json mit Datum und Commit-SHA
+   └── startet Mod Manager oder F1 Installer
+```
+
+Der Update-Vergleich fragt `api.github.com` nach dem aktuellen Commit und
+vergleicht ihn mit dem gespeicherten SHA. Heruntergeladen wird immer nur
+das Projekt-Archiv, ausgefuehrt wird daraus nichts - es werden Dateien
+entpackt, mehr nicht.
+
+Adminrechte fragt auch der Mod Manager an (Menuepunkt `E`) und der
+F1-Installer beim Start. Noetig sind sie nur fuer Schreibzugriffe in
+`Program Files`; alles, was Benutzer-Einstellungen betrifft, laeuft ohne.
 
 ## Warum PowerShell und nicht Python
 
