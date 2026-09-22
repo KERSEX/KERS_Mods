@@ -232,20 +232,38 @@ function Install-KersTools {
     }
 }
 
+function Format-KersSha {
+    param([string]$Sha)
+    if (-not $Sha) { return '' }
+    if ($Sha.Length -le 7) { return $Sha }
+    return $Sha.Substring(0, 7)
+}
+
+function Test-KersShaEqual {
+    # vergleicht auch, wenn einer der beiden Werte gekuerzt gespeichert ist
+    param([string]$A, [string]$B)
+    if (-not $A -or -not $B) { return $false }
+    $a = $A.Trim().ToLower()
+    $b = $B.Trim().ToLower()
+    $n = [Math]::Min($a.Length, $b.Length)
+    if ($n -lt 7) { return ($a -eq $b) }
+    return ($a.Substring(0, $n) -eq $b.Substring(0, $n))
+}
+
 function Invoke-UpdateCheck {
     Write-Head 'Auf Updates pruefen'
     $info = Get-InstalledInfo
     if ($info) {
-        Write-Dim ('Installiert: ' + (Format-KersDate $info.date) + $(if ($info.sha) { '  (' + $info.sha.Substring(0, 7) + ')' } else { '' }))
+        Write-Dim ('Installiert: ' + (Format-KersDate $info.date) + $(if ($info.sha) { '  (' + (Format-KersSha $info.sha) + ')' } else { '' }))
     }
     $remote = Get-RemoteSha
     if (-not $remote) {
         Write-Warn 'Der Stand auf GitHub liess sich nicht abfragen (kein Netz oder Limit).'
-    } elseif ($info -and $info.sha -eq $remote) {
+    } elseif ($info -and (Test-KersShaEqual $info.sha $remote)) {
         Write-Ok 'Alles aktuell.'
         if (-not (Read-YesNo '  Trotzdem neu laden?' $false)) { return }
     } else {
-        Write-Info ('Neuer Stand verfuegbar: ' + $remote.Substring(0, 7))
+        Write-Info ('Neuer Stand verfuegbar: ' + (Format-KersSha $remote))
     }
     [void](Install-KersTools -IsUpdate)
 }
