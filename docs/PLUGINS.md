@@ -114,6 +114,32 @@ beim Laden nur die passenden Eintraege auftauchen. Nicht vorhandene Dateien
 werden uebersprungen - so laeuft dasselbe Plugin auch, wenn eine
 Spielversion eine Datei anders nennt.
 
+## Mods ohne eigenen Code
+
+```powershell
+function Get-KersScsModDirs {
+    param($Inst)
+    return @{
+        Active   = (Join-Path $Inst.UserPath 'mod')
+        Disabled = (Join-Path $Inst.UserPath 'mod_disabled_kers')
+        Filters  = @('*.scs', '*.zip')
+    }
+}
+
+$actions += New-KersModActions -GetDirs ${function:Get-KersScsModDirs} -Label 'Mods' `
+                               -Warning 'Vor dem Online-Modus alles deaktivieren.'
+```
+
+Daraus wird ein Menuepunkt mit Liste, `[an]`/`[aus]` und Umschalten per
+Nummer. Deaktivieren verschiebt, loeschen tut es nie.
+
+## Ein Plugin fuer mehrere Spiele
+
+Ein Plugin wird ueber `plugin` in games.json zugeordnet - mehrere Spiele
+duerfen dieselbe Datei nennen. ETS2 und ATS teilen sich so
+`ScsSoftware.ps1`; was sie unterscheidet, steht in games.json (Ordner,
+Benutzerpfad), nicht im Code.
+
 ## Was dem Plugin zur Verfuegung steht
 
 ```powershell
@@ -135,6 +161,10 @@ New-KersProfileActions -GetFiles <scriptblock> -Label <text> [-Tag ..] [-Example
 Get-KersExistingPaths -Base <ordner> -Names <namen>   # nur real vorhandene Pfade
 Get-KersIniValue  -Path <datei> -Key 'FF_GAIN'
 Get-KersJsonValue -Path <datei> -Dotted 'Force Feedback.FFB Device Name'
+
+New-KersModActions -GetDirs <scriptblock> -Label <text> [-Warning ..] [-Hint ..]
+Get-KersModList   -Active <pfad> -Disabled <pfad> -Filters @('*.zip')
+Get-KersModCounts -Active <pfad> -Disabled <pfad> -Filters @('*.zip')
 ```
 
 ## Regeln fuer Plugins

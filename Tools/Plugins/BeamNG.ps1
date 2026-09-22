@@ -22,60 +22,10 @@ function Get-KersBngSettingsFiles {
 
 function Get-KersBngModDirs {
     param($Inst)
-    return [pscustomobject]@{
+    return @{
         Active   = (Join-Path $Inst.UserPath 'mods')
         Disabled = (Join-Path $Inst.UserPath 'mods_disabled_kers')
-    }
-}
-
-function Get-KersBngMods {
-    param($Inst)
-    $d = Get-KersBngModDirs $Inst
-    $out = @()
-    foreach ($f in (Get-ChildItem -LiteralPath $d.Active -Filter '*.zip' -File -ErrorAction SilentlyContinue)) {
-        $out += [pscustomobject]@{ Name = $f.Name; Path = $f.FullName; Enabled = $true; Size = $f.Length }
-    }
-    foreach ($f in (Get-ChildItem -LiteralPath $d.Disabled -Filter '*.zip' -File -ErrorAction SilentlyContinue)) {
-        $out += [pscustomobject]@{ Name = $f.Name; Path = $f.FullName; Enabled = $false; Size = $f.Length }
-    }
-    return @($out | Sort-Object Name)
-}
-
-function Invoke-KersBngMods {
-    param($Ctx, $Inst)
-    $dirs = Get-KersBngModDirs $Inst
-    while ($true) {
-        $mods = @(Get-KersBngMods $Inst)
-        Write-Host ''
-        if ($mods.Count -eq 0) {
-            Write-KersInfo 'Keine Mods gefunden.'
-            Write-KersDim ('Gesucht in: ' + $dirs.Active)
-            return
-        }
-        Write-Host ('  Mods (' + @($mods | Where-Object { $_.Enabled }).Count + ' aktiv, ' +
-                    @($mods | Where-Object { -not $_.Enabled }).Count + ' deaktiviert)') -ForegroundColor White
-        for ($i = 0; $i -lt $mods.Count; $i++) {
-            $m = $mods[$i]
-            $state = if ($m.Enabled) { '[an] ' } else { '[aus]' }
-            $col   = if ($m.Enabled) { 'Green' } else { 'DarkGray' }
-            Write-Host ('   {0,2}) {1} {2,-42} {3,8:N0} KB' -f ($i + 1), $state, $m.Name, ($m.Size / 1KB)) -ForegroundColor $col
-        }
-        Write-KersDim 'Nummer schaltet um. Deaktivierte Mods werden verschoben, nicht geloescht.'
-        $keys = @(1..$mods.Count | ForEach-Object { [string]$_ }) + @('0')
-        $sel = Read-KersKey '  Auswahl (0 = zurueck)' $keys '0'
-        if ($sel -eq '0') { return }
-
-        $m = $mods[[int]$sel - 1]
-        $target = if ($m.Enabled) { $dirs.Disabled } else { $dirs.Active }
-        try {
-            if (-not (Test-Path -LiteralPath $target)) { New-Item -ItemType Directory -Path $target -Force | Out-Null }
-            Move-Item -LiteralPath $m.Path -Destination (Join-Path $target $m.Name) -Force
-            $what = if ($m.Enabled) { 'deaktiviert' } else { 'aktiviert' }
-            Write-KersOk ($m.Name + ' ' + $what)
-            Write-KersLog ('Mod ' + $what + ': ' + $m.Name) 'INFO'
-        } catch {
-            Write-KersError ($m.Name + ': ' + $_.Exception.Message)
-        }
+        Filters  = @('*.zip')
     }
 }
 
@@ -89,11 +39,8 @@ function Get-KersPlugin {
                                        -Label 'Grafik-/Spiel-Profil' -Tag 'gfx' `
                                        -Examples '1440p_High, Performance' `
                                        -Hint 'settings\game-settings.ini und was daneben liegt'
-    $actions += [pscustomobject]@{
-        Text = 'Mods aktivieren / deaktivieren'
-        Hint = 'verschiebt ZIPs zwischen mods\ und mods_disabled_kers\ - nichts wird geloescht'
-        Run  = { param($Ctx, $Inst) Invoke-KersBngMods $Ctx $Inst }
-    }
+    $actions += New-KersModActions -GetDirs ${function:Get-KersBngModDirs} -Label 'Mods' `
+                                   -Hint 'verschiebt ZIPs zwischen mods\ und mods_disabled_kers\'
 
     return [pscustomobject]@{
         Id      = 'beamng'
@@ -120,9 +67,8 @@ function Get-KersPlugin {
             } else {
                 $lines += '   settings\       : nicht vorhanden'
             }
-            $mods = @(Get-KersBngMods $Inst)
-            $lines += ('   Mods            : ' + @($mods | Where-Object { $_.Enabled }).Count + ' aktiv, ' +
-                       @($mods | Where-Object { -not $_.Enabled }).Count + ' deaktiviert')
+            $d = Get-KersBngModDirs $Inst
+            $lines += ('   Mods            : ' + (Get-KersModCounts -Active $d.Active -Disabled $d.Disabled -Filters $d.Filters))
             $lines += ('   KERS-Profile    : ' + @(Get-KersBackups -GameId $Inst.GameId -Kind 'profile').Count)
             return $lines
         }

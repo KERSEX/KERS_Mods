@@ -14,6 +14,7 @@ KERS_Mods/
 │   │   ├── GameDetector.ps1          Steam/Epic/Registry/Ordner/Benutzerordner
 │   │   ├── BackupManager.ps1         Backup, Restore, SHA256-Pruefung
 │   │   ├── SimRacing.ps1             Profil-Menues, INI-/JSON-Leser
+│   │   ├── ModManager.ps1            Mods an/aus (verschieben statt loeschen)
 │   │   ├── GameActions.ps1           generisches Sichern/Wiederherstellen/Diagnose
 │   │   ├── Diagnostics.ps1           System- und Spielinfos
 │   │   └── games.json                welche Spiele es gibt und wo sie liegen
@@ -24,7 +25,12 @@ KERS_Mods/
 │   │   ├── AssettoCorsaCompetizione.ps1
 │   │   ├── LeMansUltimate.ps1
 │   │   ├── BeamNG.ps1
-│   │   └── EaWrc.ps1
+│   │   ├── EaWrc.ps1
+│   │   ├── ScsSoftware.ps1           ETS2 und ATS teilen sich ein Plugin
+│   │   ├── Cyberpunk2077.ps1
+│   │   ├── Minecraft.ps1
+│   │   ├── MarvelRivals.ps1
+│   │   └── GtaV.ps1
 │   │
 │   └── KERS_Mod_Manager/
 │       ├── KERS_Mod_Manager.cmd      Doppelklick-Starter
@@ -99,6 +105,19 @@ Daraus entstehen die drei Menuepunkte Speichern / Laden / Verwalten, samt
 Sicherheitskopie und SHA256-Pruefung aus dem Backup-Manager. Ein Spiel kann
 mehrere Gruppen haben (z.B. Controller und Grafik), unterschieden ueber
 `-Tag`.
+
+## Mods an- und abschalten
+
+Fuenf Spiele brauchen dasselbe, also steht es einmal in `ModManager.ps1`:
+
+```powershell
+$actions += New-KersModActions -GetDirs ${function:Get-KersScsModDirs} -Label 'Mods'
+```
+
+`GetDirs` liefert nur `@{ Active = ...; Disabled = ...; Filters = @('*.scs') }`.
+Deaktivieren verschiebt die Datei in den `_disabled_kers`-Ordner daneben,
+Aktivieren holt sie zurueck. Es wird nie etwas geloescht, und der Spiel-
+Ordner bleibt sonst unangetastet.
 
 ## Backups
 

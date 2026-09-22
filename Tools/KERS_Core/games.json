@@ -149,6 +149,148 @@
         "Scalability.ini",
         "Game.ini"
       ]
+    },
+    {
+      "id": "ets2",
+      "name": "Euro Truck Simulator 2",
+      "status": "beta",
+      "plugin": "ScsSoftware.ps1",
+      "install": {
+        "folderNames": [
+          "Euro Truck Simulator 2"
+        ],
+        "registryNames": [
+          "^Euro Truck Simulator 2$"
+        ],
+        "marker": null
+      },
+      "user": {
+        "paths": [
+          "%DOCS%\\Euro Truck Simulator 2"
+        ]
+      },
+      "backup": [
+        "config.cfg",
+        "controls.sii"
+      ]
+    },
+    {
+      "id": "ats",
+      "name": "American Truck Simulator",
+      "status": "beta",
+      "plugin": "ScsSoftware.ps1",
+      "install": {
+        "folderNames": [
+          "American Truck Simulator"
+        ],
+        "registryNames": [
+          "^American Truck Simulator$"
+        ],
+        "marker": null
+      },
+      "user": {
+        "paths": [
+          "%DOCS%\\American Truck Simulator"
+        ]
+      },
+      "backup": [
+        "config.cfg",
+        "controls.sii"
+      ]
+    },
+    {
+      "id": "cyberpunk2077",
+      "name": "Cyberpunk 2077",
+      "status": "beta",
+      "plugin": "Cyberpunk2077.ps1",
+      "install": {
+        "folderNames": [
+          "Cyberpunk 2077"
+        ],
+        "registryNames": [
+          "^Cyberpunk 2077$"
+        ],
+        "marker": null
+      },
+      "user": {
+        "paths": [
+          "%DOCS%\\CD Projekt Red\\Cyberpunk 2077"
+        ]
+      },
+      "backup": [
+        "UserSettings.json",
+        "inputUserMappings.xml"
+      ]
+    },
+    {
+      "id": "minecraft",
+      "name": "Minecraft (Java)",
+      "status": "beta",
+      "plugin": "Minecraft.ps1",
+      "install": null,
+      "user": {
+        "paths": [
+          "%APPDATA%\\.minecraft"
+        ]
+      },
+      "backup": [
+        "options.txt",
+        "optionsof.txt",
+        "optionsshaders.txt"
+      ]
+    },
+    {
+      "id": "marvel_rivals",
+      "name": "Marvel Rivals",
+      "status": "beta",
+      "plugin": "MarvelRivals.ps1",
+      "install": {
+        "folderNames": [
+          "MarvelRivals",
+          "Marvel Rivals"
+        ],
+        "registryNames": [
+          "^Marvel Rivals$"
+        ],
+        "marker": null
+      },
+      "user": {
+        "paths": [
+          "%LOCALAPPDATA%\\Marvel\\Saved\\Config\\WindowsNoEditor",
+          "%LOCALAPPDATA%\\Marvel\\Saved\\Config\\Windows"
+        ]
+      },
+      "backup": [
+        "GameUserSettings.ini",
+        "Engine.ini",
+        "Input.ini",
+        "Game.ini",
+        "Scalability.ini"
+      ]
+    },
+    {
+      "id": "gta_v",
+      "name": "Grand Theft Auto V",
+      "status": "beta",
+      "plugin": "GtaV.ps1",
+      "install": {
+        "folderNames": [
+          "Grand Theft Auto V",
+          "GTAV"
+        ],
+        "registryNames": [
+          "^Grand Theft Auto V$"
+        ],
+        "marker": null
+      },
+      "user": {
+        "paths": [
+          "%DOCS%\\Rockstar Games\\GTA V"
+        ]
+      },
+      "backup": [
+        "settings.xml"
+      ]
     }
   ]
 }

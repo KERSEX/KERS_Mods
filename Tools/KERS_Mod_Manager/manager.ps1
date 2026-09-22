@@ -19,7 +19,7 @@ $repoRoot = Split-Path -Parent $toolsDir
 $coreDir  = Join-Path $toolsDir 'KERS_Core'
 $plugDir  = Join-Path $toolsDir 'Plugins'
 
-foreach ($m in @('Logger.ps1', 'Cli.ps1', 'GameDetector.ps1', 'BackupManager.ps1', 'SimRacing.ps1', 'Diagnostics.ps1', 'GameActions.ps1')) {
+foreach ($m in @('Logger.ps1', 'Cli.ps1', 'GameDetector.ps1', 'BackupManager.ps1', 'SimRacing.ps1', 'ModManager.ps1', 'Diagnostics.ps1', 'GameActions.ps1')) {
     $f = Join-Path $coreDir $m
     if (-not (Test-Path -LiteralPath $f)) {
         Write-Host ('  [FEHLER] Core-Datei fehlt: ' + $f) -ForegroundColor Red
@@ -137,17 +137,41 @@ function Show-KersMainMenu {
             $items += @{ Separator = $true }
         }
         $items += @{ Heading = 'Werkzeuge' }
+        $items += @{ Key = 'A'; Text = 'Alle erkannten Spiele sichern' }
         $items += @{ Key = 'D'; Text = 'Diagnose (System, Spiele, Backups)' }
         $items += @{ Key = 'L'; Text = 'Logdatei anzeigen' }
         $items += @{ Separator = $true }
         $items += @{ Key = '0'; Text = 'Beenden' }
-        $keys  += @('D', 'L', '0')
+        $keys  += @('A', 'D', 'L', '0')
 
         Show-KersMenu $items
         $sel = Read-KersKey '  Auswahl' $keys '0'
 
         switch ($sel) {
             '0' { return $script:KersExitOk }
+            'A' {
+                Write-KersHead 'Alle erkannten Spiele sichern'
+                if ($instances.Count -eq 0) {
+                    Write-KersInfo 'Es wurde kein Spiel gefunden.'
+                } else {
+                    $label = Read-KersText '  Name fuer die Sicherungen' 'sammelsicherung'
+                    $done = 0
+                    foreach ($inst in $instances) {
+                        $src = Get-KersBackupSources $inst
+                        if ($src.Count -eq 0) {
+                            Write-KersDim ($inst.Title + ': nichts zu sichern')
+                            continue
+                        }
+                        Write-Host ('  ' + $inst.Title) -ForegroundColor White
+                        if (New-KersBackup -GameId $inst.GameId -Sources $src -Label $label -Note $inst.Title) { $done++ }
+                    }
+                    Write-Host ''
+                    Write-KersOk ($done.ToString() + ' von ' + $instances.Count + ' Spielen gesichert')
+                }
+                Write-Host ''
+                Write-Host '  Weiter mit Enter ...' -NoNewline -ForegroundColor DarkGray
+                [void](Read-KersLine)
+            }
             'D' {
                 Write-KersBanner 'KERS DIAGNOSTICS' ''
                 Show-KersSystemInfo

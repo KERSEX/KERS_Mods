@@ -22,15 +22,22 @@ nur ihn herunterlaedt.
 
 | Spiel | Was geht | Stand |
 |---|---|---|
-| F1 2015 - F1 26 | MOZA Wheel-Fix, Grafik-Preset, Einstellungen sichern, Diagnose | Stable |
-| Assetto Corsa | Controller-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
-| Assetto Corsa Competizione | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
-| Le Mans Ultimate | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
+| F1 2015 - F1 26 | MOZA Wheel-Fix, Grafik-Preset, Sichern, Diagnose | Stable |
+| Assetto Corsa | Controller-/Grafik-Profile, Content Manager einrichten | Beta |
+| Assetto Corsa Competizione | Wheel-/FFB- und Grafik-Profile | Beta |
+| Le Mans Ultimate | Wheel-/FFB- und Grafik-Profile | Beta |
 | BeamNG.drive | Controller-/Grafik-Profile, Mods an- und abschalten | Beta |
-| EA Sports WRC | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
+| EA Sports WRC | Wheel-/FFB- und Grafik-Profile | Beta |
+| Euro Truck Simulator 2 / ATS | Steuerungs-/Grafik-Profile, Mods an/aus | Beta |
+| Cyberpunk 2077 | Einstellungs-Profile, .archive-Mods an/aus | Beta |
+| Minecraft (Java) | Einstellungs-Profile, JAR-Mods an/aus | Beta |
+| Marvel Rivals | Grafik-/Steuerungs-Profile (nur Config, nie Spieldateien) | Beta |
+| Grand Theft Auto V | Grafik-Profile, ASI-Mods an/aus | Beta |
 
-Weitere Titel sind geplant, aber noch nicht gebaut - der ehrliche Stand
-steht in [docs/STATUS.md](docs/STATUS.md).
+Jedes Spiel bekommt ausserdem Sichern, Wiederherstellen und Diagnose.
+Stable heisst benutzt und getestet, Beta heisst: laeuft gegen Testdaten,
+aber die Pfade sind noch nicht auf einem echten System gegengeprueft.
+Der ehrliche Stand steht in [docs/STATUS.md](docs/STATUS.md).
 
 ## KERS Mod Manager
 
@@ -59,8 +66,14 @@ Browser und richtet eine heruntergeladene `Content Manager.exe` im
 Spielordner ein - mit Verknuepfung, wenn gewuenscht. Heruntergeladen oder
 gestartet wird nichts ohne dich.
 
-Bei **BeamNG** lassen sich Mods an- und abschalten, ohne sie zu loeschen:
-deaktivierte ZIPs wandern nach `mods_disabled_kers\` und jederzeit zurueck.
+**Mods an- und abschalten** gibt es bei BeamNG, ETS2/ATS, Cyberpunk,
+Minecraft und GTA V - immer nach demselben Prinzip: deaktivierte Dateien
+wandern in einen `_disabled_kers`-Ordner daneben und jederzeit zurueck.
+Geloescht wird nie etwas. Bei GTA V weist das Tool darauf hin, vor GTA
+Online alles zu deaktivieren.
+
+Im Hauptmenue sichert **A** die Einstellungen aller erkannten Spiele auf
+einmal.
 
 Profile sind benannte Sicherungen der Konfigurationsdateien: `GT3` mit
 starkem FFB, `Regen` mit weniger Gain, `1440p_Performance` fuer die Grafik -
