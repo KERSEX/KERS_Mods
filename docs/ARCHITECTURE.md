@@ -13,13 +13,16 @@ KERS_Mods/
 │   │   ├── Cli.ps1                   Banner, Menues, Eingaben, Exit-Codes
 │   │   ├── GameDetector.ps1          Steam/Epic/Registry/Ordner/Benutzerordner
 │   │   ├── BackupManager.ps1         Backup, Restore, SHA256-Pruefung
+│   │   ├── SimRacing.ps1             Profil-Menues, INI-/JSON-Leser
 │   │   ├── GameActions.ps1           generisches Sichern/Wiederherstellen/Diagnose
 │   │   ├── Diagnostics.ps1           System- und Spielinfos
 │   │   └── games.json                welche Spiele es gibt und wo sie liegen
 │   │
 │   ├── Plugins/                      pro Spiel eine Datei
 │   │   ├── F1.ps1
-│   │   └── AssettoCorsa.ps1
+│   │   ├── AssettoCorsa.ps1
+│   │   ├── AssettoCorsaCompetizione.ps1
+│   │   └── LeMansUltimate.ps1
 │   │
 │   └── KERS_Mod_Manager/
 │       ├── KERS_Mod_Manager.cmd      Doppelklick-Starter
@@ -67,10 +70,30 @@ Laufwerksbuchstaben:
 4. Epic-Manifeste unter `ProgramData\Epic\...\Manifests`
 5. Deinstallations-Eintraege der Registry (Name per Muster aus games.json)
 6. Benutzerordner (`%DOCS%`, `%LOCALAPPDATA%`, `%APPDATA%` ...)
+7. `user.fromInstall` fuer Spiele, die ihre Konfiguration im
+   Installationsordner ablegen (Le Mans Ultimate: `UserData`)
 
 Ein Treffer zaehlt nur, wenn die in `games.json` hinterlegte Marker-Datei
 bzw. der Marker-Ordner darin liegt (z.B. `actionmaps` bei F1,
 `AssettoCorsa.exe` bei Assetto Corsa).
+
+## Gemeinsame Simracing-Bausteine
+
+Assetto Corsa, ACC und Le Mans Ultimate machen dasselbe: eine Handvoll
+Konfigurationsdateien als benanntes Profil ablegen und zurueckholen. Der
+Ablauf steht einmal in `SimRacing.ps1`; ein Plugin sagt nur noch, welche
+Dateien dazugehoeren:
+
+```powershell
+$actions += New-KersProfileActions -GetFiles ${function:Get-KersAccControlFiles} `
+                                   -Label 'Wheel-/FFB-Profil' -Tag 'ctrl' `
+                                   -Examples 'MOZA_R5_GT3, LowForce'
+```
+
+Daraus entstehen die drei Menuepunkte Speichern / Laden / Verwalten, samt
+Sicherheitskopie und SHA256-Pruefung aus dem Backup-Manager. Ein Spiel kann
+mehrere Gruppen haben (z.B. Controller und Grafik), unterschieden ueber
+`-Tag`.
 
 ## Backups
 

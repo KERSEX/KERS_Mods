@@ -36,6 +36,7 @@ unter `Tools/Plugins`. Am Core muss dafuer nichts geaendert werden.
 | `install.marker` | Datei/Ordner, der im Spielordner liegen muss |
 | `user.paths` | Benutzerordner, Platzhalter `%DOCS%`, `%LOCALAPPDATA%`, `%APPDATA%`, `%USERPROFILE%`, `%PROGRAMDATA%` |
 | `user.childPattern` | Regex, wenn unterhalb je Jahrgang ein eigener Ordner liegt |
+| `user.fromInstall` | Unterordner im Spielordner, wenn die Konfiguration dort liegt (z.B. `UserData`) |
 | `backup` | Unterordner/Dateien im Benutzerordner, die gesichert werden |
 
 Ohne Plugin bekommt das Spiel bereits Sichern, Wiederherstellen und
@@ -85,6 +86,33 @@ function Get-KersPlugin {
 `$Ctx.RepoRoot` zeigt auf das Repository, damit ein Plugin mitgelieferte
 Dateien finden kann.
 
+## Profile ohne eigenen Code
+
+Fuer den haeufigsten Fall - eine Gruppe Konfigurationsdateien als
+benanntes Profil - gibt es eine Fabrik. Sie liefert die drei Menuepunkte
+Speichern, Laden und Verwalten fertig zurueck:
+
+```powershell
+function Get-KersAccControlFiles {
+    param($Inst)
+    return (Get-KersExistingPaths -Base (Join-Path $Inst.UserPath 'Config') `
+                                  -Names @('controls.json', 'ffbSettings.json'))
+}
+
+function Get-KersPlugin {
+    $actions = @()
+    $actions += New-KersProfileActions -GetFiles ${function:Get-KersAccControlFiles} `
+                                       -Label 'Wheel-/FFB-Profil' -Tag 'ctrl' `
+                                       -Examples 'MOZA_R5_GT3'
+    return [pscustomobject]@{ Id = 'acc'; Name = 'Assetto Corsa Competizione'; Actions = $actions }
+}
+```
+
+`-Tag` trennt mehrere Gruppen eines Spiels (Controller, Grafik ...), damit
+beim Laden nur die passenden Eintraege auftauchen. Nicht vorhandene Dateien
+werden uebersprungen - so laeuft dasselbe Plugin auch, wenn eine
+Spielversion eine Datei anders nennt.
+
 ## Was dem Plugin zur Verfuegung steht
 
 ```powershell
@@ -101,6 +129,11 @@ Show-KersMenu
 Write-KersLog <text> [DEBUG|INFO|WARN|ERROR]
 ConvertTo-KersSafeName <text>
 Expand-KersPath '%DOCS%\...'
+
+New-KersProfileActions -GetFiles <scriptblock> -Label <text> [-Tag ..] [-Examples ..] [-Hint ..]
+Get-KersExistingPaths -Base <ordner> -Names <namen>   # nur real vorhandene Pfade
+Get-KersIniValue  -Path <datei> -Key 'FF_GAIN'
+Get-KersJsonValue -Path <datei> -Dotted 'Force Feedback.FFB Device Name'
 ```
 
 ## Regeln fuer Plugins

@@ -23,7 +23,9 @@ nur ihn herunterlaedt.
 | Spiel | Was geht | Stand |
 |---|---|---|
 | F1 2015 - F1 26 | MOZA Wheel-Fix, Grafik-Preset, Einstellungen sichern, Diagnose | Stable |
-| Assetto Corsa | Controller-/FFB-Profile, Einstellungen sichern, Diagnose | Beta |
+| Assetto Corsa | Controller-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
+| Assetto Corsa Competizione | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
+| Le Mans Ultimate | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
 
 Weitere Titel sind geplant, aber noch nicht gebaut - der ehrliche Stand
 steht in [docs/STATUS.md](docs/STATUS.md).
@@ -48,6 +50,10 @@ steht in [docs/STATUS.md](docs/STATUS.md).
 
     0) Beenden
 ```
+
+Profile sind benannte Sicherungen der Konfigurationsdateien: `GT3` mit
+starkem FFB, `Regen` mit weniger Gain, `1440p_Performance` fuer die Grafik -
+gespeichert, geladen und geprueft ueber denselben Backup-Mechanismus.
 
 Der Manager sucht Spiele in Steam-Bibliotheken, Epic-Manifesten, der
 Registry und den ueblichen Ordnern auf allen festen Laufwerken - feste

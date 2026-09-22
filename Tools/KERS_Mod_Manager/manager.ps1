@@ -19,7 +19,7 @@ $repoRoot = Split-Path -Parent $toolsDir
 $coreDir  = Join-Path $toolsDir 'KERS_Core'
 $plugDir  = Join-Path $toolsDir 'Plugins'
 
-foreach ($m in @('Logger.ps1', 'Cli.ps1', 'GameDetector.ps1', 'BackupManager.ps1', 'Diagnostics.ps1', 'GameActions.ps1')) {
+foreach ($m in @('Logger.ps1', 'Cli.ps1', 'GameDetector.ps1', 'BackupManager.ps1', 'SimRacing.ps1', 'Diagnostics.ps1', 'GameActions.ps1')) {
     $f = Join-Path $coreDir $m
     if (-not (Test-Path -LiteralPath $f)) {
         Write-Host ('  [FEHLER] Core-Datei fehlt: ' + $f) -ForegroundColor Red

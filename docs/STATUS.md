@@ -19,9 +19,9 @@ gibt es noch nicht.
 | Spiel | Erkennung | Backup/Restore | Eigene Funktionen | Stand |
 |---|---|---|---|---|
 | F1 2015 - F1 26 | ja | ja | Wheel-Fix, Grafik-Preset, Actionmap-Uebersicht | Stable |
-| Assetto Corsa | ja | ja | Controller-/FFB-Profile | Beta |
-| Assetto Corsa Competizione | - | - | - | Geplant |
-| Le Mans Ultimate | - | - | - | Geplant |
+| Assetto Corsa | ja | ja | Controller-/FFB-Profile, Grafik-Profile | Beta |
+| Assetto Corsa Competizione | ja | ja | Wheel-/FFB-Profile, Grafik-Profile | Beta |
+| Le Mans Ultimate | ja | ja | Wheel-/FFB-Profile, Grafik-/Spiel-Profile | Beta |
 | BeamNG.drive | - | - | - | Geplant |
 | EA Sports WRC | - | - | - | Geplant |
 | ETS2 / ATS | - | - | - | Geplant |
@@ -32,11 +32,11 @@ gibt es noch nicht.
 
 ## Naechste Schritte
 
-1. Assetto Corsa in der Praxis testen (Pfade, CSP-Erkennung, Profile).
-2. ACC und Le Mans Ultimate - beide brauchen dieselben Bausteine wie AC.
-3. Gemeinsames Simracing-Profil (ein FFB-Grundsetup fuer mehrere Spiele).
-4. BeamNG und EA WRC.
-5. Danach die Nicht-Simracing-Titel.
+1. AC, ACC und LMU auf einem echten Windows-PC gegenpruefen - vor allem
+   die Dateinamen in den Konfigurationsordnern.
+2. BeamNG und EA WRC.
+3. Gemeinsames Simracing-Profil (ein FFB-Grundsetup ueber mehrere Spiele).
+4. Danach die Nicht-Simracing-Titel.
 
 ## Bekannte Grenzen
 
@@ -45,5 +45,8 @@ gibt es noch nicht.
   echten Windows-PC durch den vollen Praxistest.
 * Ob F1 seine Tastenbelegung als Datei ablegt oder im Cloud-Savegame, ist
   offen - die Diagnose im F1-Installer beantwortet das.
-* Bei Assetto Corsa sind die Pfade aus der Dokumentation uebernommen und
-  noch nicht auf einem echten System gegengeprueft.
+* Bei Assetto Corsa, ACC und Le Mans Ultimate sind Ordner- und Dateinamen
+  aus der Dokumentation uebernommen und noch nicht auf einem echten System
+  gegengeprueft. Die Plugins sichern deshalb nur, was sie wirklich finden,
+  und die Diagnose zeigt den Ist-Zustand - damit faellt sofort auf, wenn
+  eine Datei anders heisst.

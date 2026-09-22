@@ -238,6 +238,16 @@ function Get-KersGameInstances {
             Definition  = $Def
         }
     }
+    # Manche Spiele legen ihre Konfiguration im Installationsordner ab
+    # (rFactor2-Abstammung: <Spiel>\UserData) statt unter Dokumente.
+    if ($Def.user -and $Def.user.fromInstall) {
+        foreach ($k in @($instances.Keys)) {
+            $inst = $instances[$k]
+            if (-not $inst.InstallPath) { continue }
+            $p = Join-Path $inst.InstallPath $Def.user.fromInstall
+            if (Test-Path -LiteralPath $p) { $inst.UserPath = $p }
+        }
+    }
     foreach ($u in (Find-KersUserDirs $Def)) {
         $key = $u.Title.ToLower()
         if ($instances.ContainsKey($key)) {
