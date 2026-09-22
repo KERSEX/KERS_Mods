@@ -26,6 +26,8 @@ nur ihn herunterlaedt.
 | Assetto Corsa | Controller-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
 | Assetto Corsa Competizione | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
 | Le Mans Ultimate | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
+| BeamNG.drive | Controller-/Grafik-Profile, Mods an- und abschalten | Beta |
+| EA Sports WRC | Wheel-/FFB- und Grafik-Profile, Sichern, Diagnose | Beta |
 
 Weitere Titel sind geplant, aber noch nicht gebaut - der ehrliche Stand
 steht in [docs/STATUS.md](docs/STATUS.md).
@@ -50,6 +52,15 @@ steht in [docs/STATUS.md](docs/STATUS.md).
 
     0) Beenden
 ```
+
+Bei **Assetto Corsa** gibt es zusaetzlich *Content Manager einrichten*:
+das Tool zeigt die offizielle Download-Adresse, oeffnet auf Wunsch den
+Browser und richtet eine heruntergeladene `Content Manager.exe` im
+Spielordner ein - mit Verknuepfung, wenn gewuenscht. Heruntergeladen oder
+gestartet wird nichts ohne dich.
+
+Bei **BeamNG** lassen sich Mods an- und abschalten, ohne sie zu loeschen:
+deaktivierte ZIPs wandern nach `mods_disabled_kers\` und jederzeit zurueck.
 
 Profile sind benannte Sicherungen der Konfigurationsdateien: `GT3` mit
 starkem FFB, `Regen` mit weniger Gain, `1440p_Performance` fuer die Grafik -

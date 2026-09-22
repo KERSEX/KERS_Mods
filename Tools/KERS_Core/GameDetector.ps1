@@ -203,12 +203,25 @@ function Find-KersUserDirs {
         try {
             if (-not (Test-Path -LiteralPath $base)) { continue }
             if ($Def.user.childPattern) {
-                foreach ($d in (Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue)) {
-                    if ($d.Name -notmatch $Def.user.childPattern) { continue }
-                    $k = $d.FullName.ToLower()
-                    if ($seen.ContainsKey($k)) { continue }
-                    $seen[$k] = $true
-                    $out += [pscustomobject]@{ Title = $d.Name; Path = $d.FullName }
+                $children = @(Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue |
+                              Where-Object { $_.Name -match $Def.user.childPattern })
+                if ("$($Def.user.childSelect)" -eq 'latest') {
+                    # z.B. BeamNG: je Spielversion ein Ordner, interessant ist
+                    # der zuletzt benutzte - nicht jeder davon ein eigenes Spiel
+                    $children = @($children | Sort-Object LastWriteTime, Name -Descending | Select-Object -First 1)
+                    foreach ($d in $children) {
+                        $k = $d.FullName.ToLower()
+                        if ($seen.ContainsKey($k)) { continue }
+                        $seen[$k] = $true
+                        $out += [pscustomobject]@{ Title = $Def.name; Path = $d.FullName }
+                    }
+                } else {
+                    foreach ($d in $children) {
+                        $k = $d.FullName.ToLower()
+                        if ($seen.ContainsKey($k)) { continue }
+                        $seen[$k] = $true
+                        $out += [pscustomobject]@{ Title = $d.Name; Path = $d.FullName }
+                    }
                 }
             } else {
                 $k = $base.ToLower()

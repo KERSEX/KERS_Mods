@@ -37,6 +37,7 @@ unter `Tools/Plugins`. Am Core muss dafuer nichts geaendert werden.
 | `user.paths` | Benutzerordner, Platzhalter `%DOCS%`, `%LOCALAPPDATA%`, `%APPDATA%`, `%USERPROFILE%`, `%PROGRAMDATA%` |
 | `user.childPattern` | Regex, wenn unterhalb je Jahrgang ein eigener Ordner liegt |
 | `user.fromInstall` | Unterordner im Spielordner, wenn die Konfiguration dort liegt (z.B. `UserData`) |
+| `user.childSelect` | `latest` nimmt nur den zuletzt benutzten Unterordner (Versionsordner wie bei BeamNG) statt jeden als eigenes Spiel |
 | `backup` | Unterordner/Dateien im Benutzerordner, die gesichert werden |
 
 Ohne Plugin bekommt das Spiel bereits Sichern, Wiederherstellen und
@@ -147,5 +148,8 @@ Get-KersJsonValue -Path <datei> -Dotted 'Force Feedback.FFB Device Name'
   schreiben.
 * Fehler abfangen und melden, statt das Menue abstuerzen zu lassen.
 * Keine Downloads ohne ausdrueckliche Zustimmung, keine fremden Mods
-  mitliefern, keine Cheats oder Eingriffe in Anti-Cheat.
+  mitliefern, keine Cheats oder Eingriffe in Anti-Cheat. Fremdprogramme
+  (Beispiel Content Manager) werden nur benannt, verlinkt und auf Wunsch
+  eingerichtet - nie im Hintergrund geladen oder gestartet.
+* Deaktivieren heisst verschieben, nicht loeschen (Beispiel BeamNG-Mods).
 * Keine Passwoerter, Tokens oder Accountdaten speichern oder loggen.

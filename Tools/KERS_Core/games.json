@@ -94,6 +94,61 @@
       "backup": [
         "player"
       ]
+    },
+    {
+      "id": "beamng",
+      "name": "BeamNG.drive",
+      "status": "beta",
+      "plugin": "BeamNG.ps1",
+      "install": {
+        "folderNames": [
+          "BeamNG.drive"
+        ],
+        "registryNames": [
+          "^BeamNG\\.drive$"
+        ],
+        "marker": null
+      },
+      "user": {
+        "paths": [
+          "%LOCALAPPDATA%\\BeamNG.drive"
+        ],
+        "childPattern": "^\\d+\\.\\d+$",
+        "childSelect": "latest"
+      },
+      "backup": [
+        "settings"
+      ]
+    },
+    {
+      "id": "ea_wrc",
+      "name": "EA Sports WRC",
+      "status": "beta",
+      "plugin": "EaWrc.ps1",
+      "install": {
+        "folderNames": [
+          "EA SPORTS WRC",
+          "EA SPORTS™ WRC",
+          "WRC"
+        ],
+        "registryNames": [
+          "^EA SPORTS.{0,2} ?WRC$"
+        ],
+        "marker": null
+      },
+      "user": {
+        "paths": [
+          "%LOCALAPPDATA%\\WRC\\Saved\\Config\\WindowsNoEditor",
+          "%LOCALAPPDATA%\\WRC\\Saved\\Config\\Windows"
+        ]
+      },
+      "backup": [
+        "Input.ini",
+        "GameUserSettings.ini",
+        "Engine.ini",
+        "Scalability.ini",
+        "Game.ini"
+      ]
     }
   ]
 }

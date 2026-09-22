@@ -22,7 +22,9 @@ KERS_Mods/
 │   │   ├── F1.ps1
 │   │   ├── AssettoCorsa.ps1
 │   │   ├── AssettoCorsaCompetizione.ps1
-│   │   └── LeMansUltimate.ps1
+│   │   ├── LeMansUltimate.ps1
+│   │   ├── BeamNG.ps1
+│   │   └── EaWrc.ps1
 │   │
 │   └── KERS_Mod_Manager/
 │       ├── KERS_Mod_Manager.cmd      Doppelklick-Starter
@@ -72,6 +74,9 @@ Laufwerksbuchstaben:
 6. Benutzerordner (`%DOCS%`, `%LOCALAPPDATA%`, `%APPDATA%` ...)
 7. `user.fromInstall` fuer Spiele, die ihre Konfiguration im
    Installationsordner ablegen (Le Mans Ultimate: `UserData`)
+8. `user.childSelect: "latest"` fuer Spiele mit einem Ordner je Version
+   (BeamNG) - genommen wird der zuletzt benutzte, nicht jeder als eigenes
+   Spiel wie bei den F1-Jahrgaengen
 
 Ein Treffer zaehlt nur, wenn die in `games.json` hinterlegte Marker-Datei
 bzw. der Marker-Ordner darin liegt (z.B. `actionmaps` bei F1,

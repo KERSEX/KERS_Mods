@@ -22,8 +22,8 @@ gibt es noch nicht.
 | Assetto Corsa | ja | ja | Controller-/FFB-Profile, Grafik-Profile | Beta |
 | Assetto Corsa Competizione | ja | ja | Wheel-/FFB-Profile, Grafik-Profile | Beta |
 | Le Mans Ultimate | ja | ja | Wheel-/FFB-Profile, Grafik-/Spiel-Profile | Beta |
-| BeamNG.drive | - | - | - | Geplant |
-| EA Sports WRC | - | - | - | Geplant |
+| BeamNG.drive | ja | ja | Controller-/Grafik-Profile, Mods an/aus | Beta |
+| EA Sports WRC | ja | ja | Wheel-/FFB- und Grafik-Profile | Beta |
 | ETS2 / ATS | - | - | - | Geplant |
 | Cyberpunk 2077 | - | - | - | Geplant |
 | Minecraft | - | - | - | Geplant |
@@ -32,11 +32,12 @@ gibt es noch nicht.
 
 ## Naechste Schritte
 
-1. AC, ACC und LMU auf einem echten Windows-PC gegenpruefen - vor allem
-   die Dateinamen in den Konfigurationsordnern.
-2. BeamNG und EA WRC.
+1. Die Simracing-Titel auf einem echten Windows-PC gegenpruefen - vor
+   allem die Dateinamen in den Konfigurationsordnern.
+2. ETS2 und ATS.
 3. Gemeinsames Simracing-Profil (ein FFB-Grundsetup ueber mehrere Spiele).
-4. Danach die Nicht-Simracing-Titel.
+4. Danach die Nicht-Simracing-Titel (Cyberpunk, Minecraft, Marvel Rivals,
+   GTA V).
 
 ## Bekannte Grenzen
 
@@ -45,7 +46,11 @@ gibt es noch nicht.
   echten Windows-PC durch den vollen Praxistest.
 * Ob F1 seine Tastenbelegung als Datei ablegt oder im Cloud-Savegame, ist
   offen - die Diagnose im F1-Installer beantwortet das.
-* Bei Assetto Corsa, ACC und Le Mans Ultimate sind Ordner- und Dateinamen
+* Content Manager wird nicht mitgeliefert und nicht automatisch
+  heruntergeladen. Das Tool zeigt die offizielle Adresse, oeffnet auf
+  Wunsch den Browser und richtet eine bereits heruntergeladene Datei ein.
+* Bei Assetto Corsa, ACC, Le Mans Ultimate, BeamNG und EA WRC sind Ordner-
+  und Dateinamen
   aus der Dokumentation uebernommen und noch nicht auf einem echten System
   gegengeprueft. Die Plugins sichern deshalb nur, was sie wirklich finden,
   und die Diagnose zeigt den Ist-Zustand - damit faellt sofort auf, wenn
